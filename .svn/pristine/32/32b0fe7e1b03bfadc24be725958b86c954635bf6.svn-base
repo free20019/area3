@@ -1,0 +1,450 @@
+package com.tw.dao;
+
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Date;
+import java.util.List;
+
+import com.tw.entity.Form;
+import com.tw.entity.Vhic;
+import com.ze.util.DataBese;
+
+public class FormDao {
+//查询月报表
+	public List<Form>findmonthfrom(String time){
+		time=time.substring(0, 4)+time.substring(5, 7);
+		List<Form>list=new ArrayList<Form>();
+		String sql="select * from TB_TAXI_MONTHLY_REPORT t where report_time like '%"+time+"%' order by report_time desc";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Form f=new Form();
+				f.setId(rs.getString("id"));
+				f.setRepore_actual_loading(rs.getString("repore_actual_loading"));//平均实载率
+				f.setRepore_actual_mileage(rs.getString("repore_actual_mileage"));//平均实载里程
+				f.setRepore_amount_revenue(rs.getString("repore_amount_revenue"));//平均营收金额
+				f.setRepore_empty_mileage(rs.getString("repore_empty_mileage"));//平均空驶里程
+				f.setRepore_mileage(rs.getString("repore_mileage"));//平均总里程
+				f.setRepore_no(rs.getString("repore_no"));//营运总次数
+				f.setRepore_rade(rs.getString("repore_rade"));//平均上路率
+				f.setRepore_turnover(rs.getString("repore_turnover"));//平均周转次数
+				f.setRepore_vhic(rs.getString("repore_vhic"));//参与营运车辆
+				f.setRepore_wait_time(rs.getString("repore_wait_time"));//平均等候时间
+				f.setReport_time(rs.getString("report_time"));//时间
+				f.setReproe_revenue_time(rs.getString("reproe_revenue_time"));//平均重车时间
+				f.setRepore_car_time(rs.getString("repore_car_time"));//平均出车时间
+				f.setRepore_vhicno(rs.getString("repore_vhicno"));//总车辆数
+				list.add(f);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//查询年报表
+	public List<Form>findyearfrom(String time){
+		List<Form>list=new ArrayList<Form>();
+		String sql="select * from TB_TAXI_ANNUAL_REPORT t where report_time like '%"+time+"%'  order by report_time desc";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Form f=new Form();
+				f.setId(rs.getString("id"));
+				f.setReport_time(rs.getString("report_time"));//月份
+				int b=Integer.parseInt(rs.getString("report_time").substring(0, 4));
+				int c=Integer.parseInt(rs.getString("report_time").substring(4, 6));
+				String ri="";
+				if ((c+"").length()<2) {
+					ri="0"+c;
+				}
+				SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+				Date d=new Date();
+				String yue=sdf.format(d).substring(5, 7);
+				int a=0;
+				if (yue.equals(ri)) {
+					a=Integer.parseInt(sdf.format(d).substring(8, 10));
+				}else {
+					a=new Date(b,c,0).getDate();
+				}
+				int pjcls=Integer.parseInt(rs.getString("repore_vhic"))/a;
+				f.setRepore_actual_loading(rs.getString("repore_actual_loading"));//实载率
+				f.setRepore_actual_mileage(rs.getString("repore_actual_mileage"));//实载里程
+				BigDecimal  b3   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_actual_mileage"))/pjcls+"");  
+				double   f3   =   b3.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjactual_mileage(f3+"");//平均月实载里程
+				BigDecimal  b3r   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_actual_mileage"))/pjcls/a+"");  
+				double   f3r   =   b3r.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_pjactual_mileage(f3r+"");//平均日实载里程
+				f.setRepore_amount_revenue(rs.getString("repore_amount_revenue"));//营运金额
+				BigDecimal  b11   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_amount_revenue"))/pjcls+"");  
+				double   f11   =   b11.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjamount_revenue(f11+"");//平均月营运金额
+				BigDecimal  br   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_amount_revenue"))/pjcls/a+"");  
+				double   fr   =   br.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_pjamount_revenue(fr+"");//平均日营运金额
+				f.setRepore_empty_mileage(rs.getString("repore_empty_mileage"));//空载里程
+				BigDecimal  b4   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_empty_mileage"))/pjcls+"");  
+				double   f4   =   b4.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjempty_mileage(f4+"");//平均月空驶里程
+				BigDecimal  b4r   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_empty_mileage"))/pjcls/a+"");  
+				double   f4r   =   b4r.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_pjempty_mileage(f4r+"");//平均日空驶里程
+				f.setRepore_mileage(rs.getString("repore_mileage"));//总里程
+				BigDecimal  b2   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_mileage"))/pjcls+"");  
+				double   f2   =   b2.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjmileage(f2+"");//平均月总里程
+				BigDecimal  b2r   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_mileage"))/pjcls/a+"");  
+				double   f2r   =   b2r.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_pjmileage(f2r+"");//平均日总里程
+				f.setRepore_no(rs.getString("repore_no"));//营运单数
+				f.setRepore_ypjno(Integer.parseInt(rs.getString("repore_no"))/(Integer.parseInt(rs.getString("repore_vhic"))/a)+"");//每月平均单数
+				f.setRepore_pjno((Integer.parseInt(rs.getString("repore_no"))/(Integer.parseInt(rs.getString("repore_vhic"))/a)/a)+"");//每日平均单数
+				f.setRepore_rade(rs.getString("repore_rade"));//上路率
+				f.setRepore_turnover(rs.getString("repore_turnover"));//周转次数
+				BigDecimal  b1   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_turnover"))/a+"");  
+				double   f1   =   b1.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_pjturnover(f1+"");//平均周转次数
+				f.setRepore_vhic(rs.getString("repore_vhic"));//参与营运车辆数
+				f.setRepore_pjvhic(Integer.parseInt(rs.getString("repore_vhic"))/a+"");//平均参加营运车辆
+				//f.setReproe_revenue_time(rs.getString("reproe_revenue_time"));
+				f.setRepore_car_time(rs.getString("repore_car_time"));//出车时间
+				f.setRepore_pjcar_time(Integer.parseInt(rs.getString("repore_car_time"))/(Integer.parseInt(rs.getString("repore_vhic"))/a)+"");//平均出车时间
+				f.setRepore_vhicno(rs.getString("repore_vhicno"));
+				list.add(f);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//查询季度报表
+	public List<Form>findseasonsfrom(String time){
+		List<Form>list=new ArrayList<Form>();
+		String sql="select * from TB_TAXI_SEASONS_REPORT t where report_time like '%"+time+"%' order by report_time ";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Form f=new Form();
+				f.setId(rs.getString("id"));
+				f.setReport_time(rs.getString("report_time"));//时间
+				SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+				Date d=new Date();
+				String year=sdf.format(d).substring(0, 4);
+				String month=sdf.format(d).substring(5, 7);
+				String day=sdf.format(d).substring(8, 10);
+				int a=0,b=0,c=0,yues = 0;
+				if (time.equals(year)) {
+					if (rs.getString("report_time").substring(5, 9).equals("第一季度")) {
+						switch(Integer.parseInt(month)){
+						case 1:a=Integer.parseInt(day);yues=1;break;
+						case 2:a=new Date(Integer.parseInt(time),1,0).getDate();
+						b=Integer.parseInt(day);yues=2;break;
+						case 3:a=new Date(Integer.parseInt(time),1,0).getDate();
+						b=new Date(Integer.parseInt(time),2,0).getDate();
+						c=Integer.parseInt(day);yues=3;break;
+						default:a=new Date(Integer.parseInt(time),1,0).getDate();
+						b=new Date(Integer.parseInt(time),2,0).getDate();
+						c=new Date(Integer.parseInt(time),3,0).getDate();
+						yues=3;
+						}
+					}else if (rs.getString("report_time").substring(5, 9).equals("第二季度")) {
+						switch(Integer.parseInt(month)){
+						case 4:a=Integer.parseInt(day);yues=1;break;
+						case 5:a=new Date(Integer.parseInt(time),4,0).getDate();
+						b=Integer.parseInt(day);yues=2;break;
+						case 6:a=new Date(Integer.parseInt(time),4,0).getDate();
+						b=new Date(Integer.parseInt(time),5,0).getDate();
+						c=Integer.parseInt(day);yues=3;break;
+						default:a=new Date(Integer.parseInt(time),4,0).getDate();
+						b=new Date(Integer.parseInt(time),5,0).getDate();
+						c=new Date(Integer.parseInt(time),6,0).getDate();yues=3;
+						}
+					}if (rs.getString("report_time").substring(5, 9).equals("第三季度")) {
+						switch(Integer.parseInt(month)){
+						case 7:a=Integer.parseInt(day);yues=1;break;
+						case 8:a=new Date(Integer.parseInt(time),7,0).getDate();
+						b=Integer.parseInt(day);yues=2;break;
+						case 9:a=new Date(Integer.parseInt(time),7,0).getDate();
+						b=new Date(Integer.parseInt(time),8,0).getDate();
+						c=Integer.parseInt(day);yues=3;break;
+						default:a=new Date(Integer.parseInt(time),7,0).getDate();
+						b=new Date(Integer.parseInt(time),8,0).getDate();
+						c=new Date(Integer.parseInt(time),9,0).getDate();yues=3;
+						}
+					}if (rs.getString("report_time").substring(5, 9).equals("第四季度")) {
+						switch(Integer.parseInt(month)){
+						case 10:a=Integer.parseInt(day);yues=1;break;
+						case 11:a=new Date(Integer.parseInt(time),10,0).getDate();
+						b=Integer.parseInt(day);yues=2;break;
+						case 12:a=new Date(Integer.parseInt(time),10,0).getDate();
+						b=new Date(Integer.parseInt(time),11,0).getDate();
+						c=Integer.parseInt(day);yues=3;break;
+						default:a=new Date(Integer.parseInt(time),10,0).getDate();
+						b=new Date(Integer.parseInt(time),11,0).getDate();
+						c=new Date(Integer.parseInt(time),12,0).getDate();yues=3;
+						}
+					}
+				}else {
+					if (rs.getString("report_time").substring(5, 9).equals("第一季度")) {
+						a=new Date(Integer.parseInt(time),1,0).getDate();
+						b=new Date(Integer.parseInt(time),2,0).getDate();
+						c=new Date(Integer.parseInt(time),3,0).getDate();
+						yues=3;
+					}else if (rs.getString("report_time").substring(5, 9).equals("第二季度")) {
+						a=new Date(Integer.parseInt(time),4,0).getDate();
+						b=new Date(Integer.parseInt(time),5,0).getDate();
+						c=new Date(Integer.parseInt(time),6,0).getDate();yues=3;
+					}if (rs.getString("report_time").substring(5, 9).equals("第三季度")) {
+						a=new Date(Integer.parseInt(time),7,0).getDate();
+						b=new Date(Integer.parseInt(time),8,0).getDate();
+						c=new Date(Integer.parseInt(time),9,0).getDate();yues=3;
+					}if (rs.getString("report_time").substring(5, 9).equals("第四季度")) {
+						a=new Date(Integer.parseInt(time),10,0).getDate();
+						b=new Date(Integer.parseInt(time),11,0).getDate();
+						c=new Date(Integer.parseInt(time),12,0).getDate();yues=3;
+					}
+				}
+				int jts=a+b+c;
+				int ypj=Integer.parseInt(rs.getString("repore_vhic"))/jts;
+				f.setRepore_actual_loading(rs.getString("repore_actual_loading"));//平均实载率
+				f.setRepore_actual_mileage(rs.getString("repore_actual_mileage"));//平均实载里程
+				BigDecimal  b1yyy   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_actual_mileage"))/ypj/jts+"");  
+				double   f1yyy  =   b1yyy.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_jpjactual_mileage(f1yyy+"");//平均月实载里程
+				BigDecimal  b1yrr   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_actual_mileage"))/ypj+"");  
+				double   f1yrr   =   b1yrr.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjactual_mileage(f1yrr+"");//平均日实载里程
+				f.setRepore_amount_revenue(rs.getString("repore_amount_revenue"));//平均营收金额
+				BigDecimal  b1ry   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_amount_revenue"))/ypj+"");  
+				double   f1ry   =   b1ry.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjamount_revenue(f1ry+"");//平均月营收金额
+				BigDecimal  b1r   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_amount_revenue"))/ypj/jts+"");  
+				double   f1r   =   b1r.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_jpjamount_revenue(f1r+"");//平均日营收金额
+				f.setRepore_empty_mileage(rs.getString("repore_empty_mileage"));//平均空驶里程
+				BigDecimal  b1yyyy   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_empty_mileage"))/ypj/jts+"");  
+				double   f1yyyy  =   b1yyyy.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_jpjempty_mileage(f1yyyy+"");//平均月空驶里程
+				BigDecimal  b1yrrr   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_empty_mileage"))/ypj+"");  
+				double   f1yrrr   =   b1yrrr.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjempty_mileage(f1yrrr+"");//平均日空驶里程
+				f.setRepore_mileage(rs.getString("repore_mileage"));//平均总里程
+				BigDecimal  b1yy   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_mileage"))/ypj+""); 
+				double   f1yy  =   b1yy.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_jpjmileage(f1yy+"");//平均月总里程
+				BigDecimal  b1yr   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_mileage"))/ypj/jts+"");  
+				double   f1yr   =   b1yr.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjmileage(f1yr+"");//平均日总里程
+				f.setRepore_no(rs.getString("repore_no"));//营运总次数
+				f.setRepore_ypjno((Integer.parseInt(rs.getString("repore_no")))/ypj+"");//单车日平均
+				f.setRepore_jpjno((Integer.parseInt(rs.getString("repore_no")))/jts/ypj+"");//单车月平均
+				f.setRepore_rade(rs.getString("repore_rade"));//平均上路率
+				f.setRepore_turnover(rs.getString("repore_turnover"));//平均周转次数
+				BigDecimal  b1y   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_turnover"))/ypj+"");  
+				double   f1y   =   b1y.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjturnover(f1y+"");//单车月周转次数
+				BigDecimal  b1   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_turnover"))/ypj/jts+"");  
+				double   f1   =   b1.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_jpjturnover(f1+"");//单车日周转次数
+				f.setRepore_vhic(rs.getString("repore_vhic"));//参与营运总车辆数
+				f.setRepore_ypjvhic(ypj+"");//参与营运平均月车辆数
+				f.setRepore_wait_time(rs.getString("repore_wait_time"));//平均等候时间
+				f.setReproe_revenue_time(rs.getString("reproe_car_heavy_time"));//平均重车时间
+				f.setRepore_car_time(rs.getString("repore_car_time"));//平均出车时间
+				f.setRepore_jpjcar_time((Integer.parseInt(rs.getString("repore_car_time")))/ypj+"");//平均出车时间
+				f.setRepore_vhicno(rs.getString("repore_vhicno"));//总车辆数
+				list.add(f);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	} 
+	//查询逐年报表
+	public List<Form>findyearsfrom(){
+		List<Form>list=new ArrayList<Form>();
+		String sql="select * from TB_TAXI_YEARS_REPORT t  order by report_time desc";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Form f=new Form();
+				f.setId(rs.getString("id"));
+				
+				SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+				Date d=new Date();
+				String time=sdf.format(d);
+				int count = 0;
+				if (rs.getString("report_time").equals(time.substring(0, 4))) {
+				        int days = 0;
+				        int year=Integer.parseInt(time.substring(0,4));
+				        int month=Integer.parseInt(time.substring(5, 7));
+				        int day=Integer.parseInt(time.substring(8, 10));
+				        if (year > 0 && month > 0 && month < 13 && day > 0 && day < 32) {
+				            for (int i = 1; i < month; i++) {
+				                switch (i) {
+				                case 1:
+				                case 3:
+				                case 5:
+				                case 7:
+				                case 8:
+				                case 10:
+				                case 12:
+				                    days = 31;
+				                    break;
+				                case 4:
+				                case 6:
+				                case 9:
+				                case 11:
+				                    days = 30;
+				                    break;
+				                case 2: {
+				                    if ((year % 4 == 0 && year % 1 != 0) || (year % 400 == 0)) {
+				                        days = 29;
+				                    } else {
+				                        days = 28;
+				                    }
+				                    break;
+				                }
+				                }
+				                count = count + days;
+				            }
+				            count = count + day;
+				        } 
+				}else {
+					int py=Integer.parseInt(rs.getString("report_time"));
+					if((py % 400 == 0)||(py % 4 == 0)&&(py % 100 != 0)) {
+						count=366;
+					}else {
+						count=365;
+					}
+				}
+				int ycl=Integer.parseInt(rs.getString("repore_vhic"))/count;
+				f.setReport_time(rs.getString("report_time"));//时间
+				f.setRepore_actual_loading(rs.getString("repore_actual_loading"));//平均实载率
+				f.setRepore_actual_mileage(rs.getString("repore_actual_mileage"));//平均实载里程
+				BigDecimal  b1yyy   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_actual_mileage"))/ycl+"");  
+				double   f1yyy  =   b1yyy.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjactual_mileage(f1yyy+"");//平均月实载里程
+				BigDecimal  b1yrr   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_actual_mileage"))/ycl/count+"");  
+				double   f1yrr   =   b1yrr.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_npjactual_mileage(f1yrr+"");//平均日实载里程
+				f.setRepore_amount_revenue(rs.getString("repore_amount_revenue"));//平均营收金额
+				BigDecimal  b1ry   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_amount_revenue"))/ycl+"");  
+				double   f1ry   =   b1ry.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjamount_revenue(f1ry+"");//平均月营收金额
+				BigDecimal  b1r   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_amount_revenue"))/ycl/count+"");  
+				double   f1r   =   b1r.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_npjamount_revenue(f1r+"");//平均日营收金额
+				f.setRepore_empty_mileage(rs.getString("repore_empty_mileage"));//平均空驶里程
+				BigDecimal  b1yyyy   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_empty_mileage"))/ycl+"");  
+				double   f1yyyy  =   b1yyyy.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjempty_mileage(f1yyyy+"");//平均月空驶里程
+				BigDecimal  b1yrrr   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_empty_mileage"))/ycl/count+"");  
+				double   f1yrrr   =   b1yrrr.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_npjempty_mileage(f1yrrr+"");//平均日空驶里程
+				f.setRepore_mileage(rs.getString("repore_mileage"));//平均总里程
+				BigDecimal  b1yy   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_mileage"))/ycl+""); 
+				double   f1yy  =   b1yy.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_ypjmileage(f1yy+"");//平均月总里程
+				BigDecimal  b1yr   =   new   BigDecimal(Double.parseDouble(rs.getString("repore_mileage"))/ycl/count+"");  
+				double   f1yr   =   b1yr.setScale(2,   BigDecimal.ROUND_HALF_UP).doubleValue();  
+				f.setRepore_npjmileage(f1yr+"");//平均日总里程
+				f.setRepore_no(rs.getString("repore_no"));//营运总次数
+				f.setRepore_ypjno(Integer.parseInt(rs.getString("repore_no"))/ycl+"");//营运次数月
+				f.setRepore_npjno(Integer.parseInt(rs.getString("repore_no"))/ycl/count+"");//营运次数日
+				f.setRepore_rade(rs.getString("repore_rade"));//平均上路率
+				f.setRepore_turnover(rs.getString("repore_turnover"));//平均周转次数
+				f.setRepore_vhic(rs.getString("repore_vhic"));//参与营运车辆
+				f.setRepore_npjvhic(Integer.parseInt(rs.getString("repore_vhic"))/count+"");//每日平均营运车辆数
+				f.setRepore_wait_time(rs.getString("repore_wait_time"));//平均等候时间
+				f.setReproe_revenue_time(rs.getString("reproe_car_heavy_time"));//平均重车时间
+				f.setRepore_car_time(rs.getString("repore_car_time"));//平均出车时间
+				f.setRepore_ypjcar_time(Integer.parseInt(rs.getString("repore_car_time"))/ycl+"");//平均出车时间yue
+				f.setRepore_vhicno(rs.getString("repore_vhicno"));//总车辆数
+				list.add(f);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	} 
+	//营运日报
+	public List<Form>finddayform(String time){
+		List<Form>list=new ArrayList<Form>();
+		String sql="select * from TB_TAXI_RUN_INFO_RECORD_TEST where" +
+				" db_time>=to_date('"+time+" 00:00:00','yyyy-mm-dd hh24:mi:ss') and " +
+				" db_time<=to_date('"+time+" 23:59:59','yyyy-mm-dd hh24:mi:ss') order by db_time desc";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while (rs.next()) {
+				Form f=new Form();
+				f.setReport_time(rs.getString("db_time").substring(0,19));//时间
+				f.setRepore_actual_loading(rs.getString("actual_load_rate"));//平均实载率
+				f.setRepore_wait_time(rs.getString("waitting_time"));//载客等候时间
+				f.setRepore_empty_mileage(rs.getString("no_load_mileage"));//空驶里程
+				f.setRepore_actual_mileage(rs.getString("actual_load_mileage"));//载客里程
+				f.setRepore_no(rs.getString("run_times"));//周转次数
+				f.setRepore_amount_revenue(rs.getString("run_profit"));//营收金额
+				f.setReproe_revenue_time(rs.getString("run_time"));//重车时间
+				f.setRepore_vhicno(findmeiyou(rs.getString("db_time"))+"");
+				list.add(f);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//查询时间段内的营运车辆数
+	public int findmeiyou(String time){
+		String sql="select count(distinct (vhic)) c from HZGPS_CITIZEN.TB_CITIZEN_2015@TAXILINK45 t" +
+				" where shangche>=to_date('"+time.substring(0, 13)+":00:00','yyyy-MM-dd hh24:mi:ss')" +
+				" and  shangche<to_date('"+time.substring(0, 13)+":59:59','yyyy-MM-dd hh24:mi:ss')";
+		int totalpage=0;
+		PreparedStatement ps=null;
+		ResultSet rs=null;
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			ps = con.prepareStatement(sql);
+			rs=ps.executeQuery();
+			if (rs.next()) {
+				totalpage=rs.getInt("c");
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return totalpage;
+	}
+}

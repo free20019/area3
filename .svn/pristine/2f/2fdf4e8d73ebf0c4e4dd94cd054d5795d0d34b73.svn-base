@@ -1,0 +1,38 @@
+package com.ze.util;
+
+
+
+
+
+public class Global {
+	//public static final int RcvBufferSize = 1024*10;
+	//public static final int SendBufferSize = 1024*10;
+	//public static final int MsgBufferSize = 1024*10;
+//	public static final int LoginType = 1;
+//	public static final int HuiFangType = 2;
+//	public static final int PhotoType = 3;
+//	
+//	public static final int CheckTime = 3*60;
+//	
+//	public static final int SendBufferSize = 1024*1000;
+//	
+//	public static final String HZGPS = "hzgps";
+//	public static final String TZGPS = "tzgps";
+//	public static final String SHGPS = "shgps";
+//	public static final String ZJJYGPS = "zjjygps";
+	
+	public static String DenCrypt(String str){
+		String Key ="234234sdfrsdfsdfsdfsdfs";
+		byte[] KeyByte = Key.getBytes();
+		byte[] StrByte = str.getBytes();
+		int y =0;
+		for(int i=0;i<StrByte.length;i++){
+			byte a = (byte) ((StrByte[i] & 0x0f)^(KeyByte[y] & 0x0f));			
+			StrByte[i]=(byte)((StrByte[i] & 0xf0)+ a);
+			y++;
+			if(y>=KeyByte.length) y =0;			
+		}		
+		return new String(StrByte);
+	}
+	
+}

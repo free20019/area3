@@ -1,0 +1,124 @@
+package com.ze.util;
+
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+
+import com.tw.entity.Vehicle;
+
+public class GetGdzb {
+	public String getzuobiao(String lati,String longi){
+		String path="http://restapi.amap.com/v3/assistant/coordinate/convert?locations="+longi+","+lati+"&coordsys=gps&output=xml&key=40e8b43bd8e34290eedc06d8c06dd77b";
+		URL url=null;
+		SAXReader saxReader = new SAXReader();
+		URLConnection conn=null;
+		InputStream is=null;
+		 Document document=null;
+		try {
+			url = new URL(path);
+			conn = url.openConnection();
+			is = conn.getInputStream();
+			document = saxReader.read(is);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        Element root = document.getRootElement();
+        Element zuobiao = (Element) root.selectSingleNode("/response/locations");
+       String place= zuobiao.getText();
+       return place;
+	}
+	
+	public List<Vehicle> getzblist(List<Vehicle> vehis){
+		if(vehis.size()<=300){
+			return getsub(vehis);
+		}else{
+			List<Vehicle> v = new ArrayList<Vehicle>();
+			int num = vehis.size()/300;
+			for(int i=1;i<num+1;i++){
+				v.addAll(getsub(vehis.subList((i-1)*300, i*300)));
+			}
+			if(vehis.size()>num*300){
+				//System.out.println(num*300+"  "+vehis.size());
+				v.addAll(getsub(vehis.subList(num*300, vehis.size())));
+			}
+//			System.out.println("vvvvvv="+v.size());
+			return v;
+		}
+	}
+	
+	public static List<Vehicle> getsub(List<Vehicle> vehis){
+			String zbs = "";
+			for(int i=0;i<vehis.size();i++){
+				String lo = vehis.get(i).getLongi()==null?"0":vehis.get(i).getLongi();
+				String la = vehis.get(i).getLati()==null?"0":vehis.get(i).getLati();
+				if(lo.length()>10){
+					lo = lo.substring(0, 9);
+				}
+				if(la.length()>10){
+					la = la.substring(0, 8);
+				}
+				zbs+=lo+","+la+";";
+			}
+			String path="http://restapi.amap.com/v3/assistant/coordinate/convert?locations="+zbs+"&coordsys=gps&output=xml&key=ce59b0232918d1d70c511838f191b8ba";
+			//System.out.println(path);
+			URL url=null;
+			SAXReader saxReader = new SAXReader();
+			URLConnection conn=null;
+			InputStream is=null;
+			 Document document=null;
+			try {
+				url = new URL(path);
+				conn = url.openConnection();
+				is = conn.getInputStream();
+				document = saxReader.read(is);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	        Element root = document.getRootElement();
+	        Element zuobiao = (Element) root.selectSingleNode("/response/locations");
+	        // allSong�ڵ��µ�Name�ڵ��value
+	       String place= zuobiao.getText();
+	      // System.out.println(place);
+	       String [] ps = place.split(";");
+	       for(int i=0;i<ps.length;i++){
+	    	   vehis.get(i).setLati(ps[i].split(",")[1]);
+	    	   vehis.get(i).setLongi(ps[i].split(",")[0]);
+			}
+	       return vehis;
+	}
+	
+	//�ҵ�һ�����������
+	public Vehicle getone(Vehicle vehis){
+		String path="http://restapi.amap.com/v3/assistant/coordinate/convert?locations="+vehis.getLongi()+","+vehis.getLati()+"&coordsys=gps&output=xml&key=ce59b0232918d1d70c511838f191b8ba";
+		//System.out.println(path);
+		URL url=null;
+		SAXReader saxReader = new SAXReader();
+		URLConnection conn=null;
+		InputStream is=null;
+		 Document document=null;
+		try {
+			url = new URL(path);
+			conn = url.openConnection();
+			is = conn.getInputStream();
+			document = saxReader.read(is);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        Element root = document.getRootElement();
+        Element zuobiao = (Element) root.selectSingleNode("/response/locations");
+        // allSong�ڵ��µ�Name�ڵ��value
+       String place= zuobiao.getText();
+      // System.out.println(place);
+    	   vehis.setLati(place.split(",")[1]);
+    	   vehis.setLongi(place.split(",")[0]);
+       return vehis;
+}
+}

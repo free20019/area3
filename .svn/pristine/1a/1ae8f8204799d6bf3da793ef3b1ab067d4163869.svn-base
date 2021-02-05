@@ -1,0 +1,846 @@
+
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"
+contentType="text/html; charset=UTF-8" %>
+<script src="js/jquery.blockUI.js"></script>
+<div class="row" style="height: 98%" >
+<div style="height: 100%;float: left;width: 74%" id="lefttdmany">
+		<div style="height: 65%;width: 100%;" id="mapdivmany" > 
+			<table border="0" style="height: 100%;width: 100%">
+			<tr style="width: 98%;">
+				<td style="width: 100%;height: 100%"><div id="many-data-div" class="google_maps" style="height: 100%;width: 100%">&nbsp;</div></td>
+			</tr>
+		</table>
+		
+		</div>
+		<!-- 
+		<div id="data-div" class="google_maps" style="height: 65%;width: 100%">&nbsp;</div>
+		 -->
+			<TABLE border=0 cellPadding=0 cellSpacing=0 height="9px" width="100%" style="background-color: #D0DBD7;padding: -5px;" >
+          <TBODY>
+            <TR> 
+              <TD onclick=switchSysBar1many() style="HEIGHT: 9px;cursor:pointer;" align="center"><i class="fa fa-chevron-down" id="utodmany"><input type="hidden" id="switchPoint1many" value="3"></i></TD>
+            </TR>
+          </TBODY>
+        </TABLE>
+			<!-- Widget ID (each widget will need unique ID)-->
+			<div id="monitortabsmany"  style="height: 35%;width: 100%;">
+				<ul>
+					<li>
+						<a href="#tabs-a" >定位信息(<font id="carnumidmany">0</font>)</a>
+					</li>
+				</ul>
+				<div id="tabs-a" style="width: 100%;overflow: auto;height: 80%">
+					<table id="dw_tablemany" class="table table-striped table-bordered table-hover" style="width: 100%;padding-top: 0px;">
+							<thead>
+								<tr>
+									<th nowrap='nowrap'>序号</th>
+									<th nowrap='nowrap'>车牌</th>
+									<th nowrap='nowrap'>车辆颜色</th>
+									<th nowrap='nowrap'>分公司</th>
+									<th nowrap='nowrap'>Sim卡号</th>
+									<th nowrap='nowrap'>车速(km/h)</th>
+									<th nowrap='nowrap'>状态</th>
+									<th nowrap='nowrap'>汇报时间</th>
+									<th nowrap='nowrap'>当前定位</th>
+									<th nowrap='nowrap'>终端类型</th>
+									<th nowrap='nowrap'>车辆类型</th>
+								</tr>
+							</thead>
+							<tbody id="dw_datamany">
+							</tbody>
+						</table>
+				</div>
+			</div>
+</div>
+<TABLE border=0 cellPadding=0 cellSpacing=0 height="102%" style="background-color: #D0DBD7;float: left">
+          <TBODY>
+            <TR> 
+              <TD onclick=switchSysBarmany() style="HEIGHT: 100%;cursor:pointer"><i class="fa fa-chevron-right" id="ltormany"><input type="hidden" id="switchPointmany" value="3"></i></TD>
+            </TR>
+          </TBODY>
+        </TABLE>
+	<div class="jarviswidget jarviswidget-color-darken" id="wid-id-1" data-widget-editbutton="false" data-widget-custombutton="false"  style="overflow: auto;width: 24%;float: left;height: 102%;">
+				<!-- 
+				<header>
+					<span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+					<h2>车辆列表</h2>				
+					
+				</header>
+				 -->
+
+				<!-- widget div-->
+					
+					<!-- widget content -->
+					<div class="widget-body" style="overflow: auto;height: 100%" id="monirightmany" >
+						<div class="widget-body-toolbar" align="left" >
+							<form action="" id="checkout-form" class="smart-form" novalidate="novalidate" >
+								<label class="select" style="width:100%;">
+											<select  id="bamany" class="select" onchange="findcompmany(this.value)">
+												<option value="0" selected=""  disabled="">--选择公司--</option>
+											</select><i></i> 
+								</label>
+								<br>
+								<label class="select" style="width:100%;">
+											<select id="compmany" class="select" onchange="findgjclmany(this.value)">
+												<option value="0" selected=""  disabled="">--选择分公司--</option>
+											</select><i></i>
+								</label>
+								<br>
+								<label class="select" style="width:100%;">
+											<select id="carmany" class="select">
+												<option value="0" selected=""  disabled="">--选择车辆--</option>
+											</select><i></i>
+								</label>
+								<br>
+								<section style=" width:30%;float:left">
+										<label class="input"> 
+											 <input id="manycar" type="text"  placeholder="车辆过滤"   onkeyup="querymanycar()"></input>
+										</label>
+								</section>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									<a href="javascript:void(0);" class="btn btn-primary" onclick="addmany();">添   加</a>
+									</form>
+
+						</div>
+						<!-- gps数据 
+						-->
+						<table id="tablemany" class="table table-striped table-bordered table-hover" style="overflow: auto;">
+							<thead>
+								<tr>
+									<th nowrap='nowrap'>车辆</th>
+									<th nowrap='nowrap'>监控时间</th>
+									<th nowrap='nowrap'>操作</th>
+								</tr>
+							</thead>
+							<tbody id="datamany">
+							</tbody>
+						</table>
+					
+
+					</div>
+				</div>
+
+</div>
+
+<script type="text/javascript">
+	// DO NOT REMOVE : GLOBAL FUNCTIONS!
+	pageSetUp();
+	initializemany();
+	querymany();
+	$('#monitortabsmany').tabs();
+	// PAGE RELATED SCRIPTS
+	/*
+	 *  Maps Initialize
+	 */
+	var typemany=0;
+	var mapObjmany;
+	var markermany="";
+	var markerlistmany = new Array();
+	function initializemany() {
+		var position=new AMap.LngLat(120.16378,30.25840);//创建中心点坐标
+		 mapObjmany=new AMap.Map("many-data-div",{center:position,level:15,resizeEnable:true});//创建地图实例
+		 mapObjmany.plugin(["AMap.ToolBar","AMap.OverView","AMap.Scale"],function(){
+			  //加载工具条
+			  tool=new AMap.ToolBar({
+			    direction:false,//隐藏方向导航
+			    ruler:false,//隐藏视野级别控制尺
+			    autoPosition:false//禁止自动定位
+			  });
+			  mapObjmany.addControl(tool);
+			  //加载鹰眼
+			  view=new AMap.OverView();
+			  mapObjmany.addControl(view);
+			  //加载比例尺
+			  scale=new AMap.Scale();
+			  mapObjmany.addControl(scale);
+			  mapObjmany.plugin(["AMap.MapType"], function() {
+					var type = new AMap.MapType({defaultType:0});//初始状态使用2D地图
+					mapObjmany.addControl(type);
+				});
+			});
+	}
+function setformatmany(obj){
+	var y=(obj.getFullYear()).toString();
+	var m=(obj.getMonth()+1).toString();
+	if(m.length==1){
+		m="0"+m;
+	}
+	var d=obj.getDate().toString();
+	if(d.length==1){
+		d="0"+d;
+	}
+	var h = obj.getHours().toString();
+	if(h.length==1){
+		h="0"+h;
+	}
+	var mi = obj.getMinutes().toString();
+	if(mi.length==1){
+		mi="0"+mi;
+	}
+	var s = obj.getSeconds().toString();
+	if(s.length==1){
+		s="0"+s;
+	}
+	var time=y+"-"+m+"-"+d+" "+h+":"+mi+":"+s; 
+	return time;
+}
+var vhicsmany=null;
+function querymany(){
+	$.ajax({
+		url : 'chaxunvhichis.action',
+		type : 'post',
+		data:{
+		"keyword" : ""
+		},
+		dataType: 'json',
+		timeout : 180000,
+		success:function(json){
+			$("#carmany").empty();   
+			$("#carmany").append("<option value='0' >--选择车辆--</option>");
+			vhicsmany = json.vehilist;
+			for(var i=0;i<vhicsmany.length;i++){
+				$("#carmany").append("<option value='"+vhicsmany[i].vehino+"' >"+vhicsmany[i].vehino+"</option>");
+			}
+			getallmanyvalues();
+			var baname = json.baname;
+			$("#bamany").empty();   
+			$("#bamany").append("<option value='0' >--选择公司--</option>");
+			for(var i=0;i<baname.length;i++){
+				$("#bamany").append("<option value='"+baname[i].id+"' >"+baname[i].name+"</option>");
+			}
+		},
+		error:function(){
+			
+		}		
+	});
+}
+
+function findcompmany(obj){
+	$.ajax({
+		url : 'findfgs.action',
+		type : 'post',
+		data:{
+			"baid" : obj
+		},
+		dataType: 'json',
+		timeout : 180000,
+		success:function(json){
+			var compname = json.compname;
+			$("#compmany").empty();   
+			$("#compmany").append("<option value='0' >--选择公司--</option>");
+			for(var i=0;i<compname.length;i++){
+				$("#compmany").append("<option value='"+compname[i].id+"' >"+compname[i].name+"</option>");
+			}
+			$("#carmany").empty();   
+			$("#carmany").append("<option value='0' >--选择车辆--</option>");
+			vhicsmany = json.vehilist;
+			for(var i=0;i<vhicsmany.length;i++){
+				$("#carmany").append("<option value='"+vhicsmany[i].vehino+"' >"+vhicsmany[i].vehino+"</option>");
+			}
+			getallmanyvalues();
+		},
+		error:function(){
+		}		
+	});
+}
+function findgjclmany(obj){
+	$.ajax({
+		url : 'findgjcl.action',
+		type : 'post',
+		data:{
+			"keyword" : obj
+		},
+		dataType: 'json',
+		timeout : 180000,
+		success:function(json){
+			$("#carmany").empty();   
+			$("#carmany").append("<option value='0' >--选择车辆--</option>");
+			vhicsmany = json.vehilist;
+			for(var i=0;i<vhicsmany.length;i++){
+				$("#carmany").append("<option value='"+vhicsmany[i].vehino+"' >"+vhicsmany[i].vehino+"</option>");
+			}
+			getallmanyvalues();
+		},
+		error:function(){
+		}		
+	});
+}
+var arrmany = new Array(); //数组定义标准形式，不要写成Array arr = new Array();
+function getallmanyvalues(){
+	arrmany = new Array();
+     $("#carmany option").each(function () {
+         var val = $(this).val(); //获取单个value
+         arrmany.push(val);
+     });
+}
+function querymanycar(){
+	$("#carmany").empty();   
+	for(var i=0;i<arrmany.length;i++){
+		if(arrmany[i].indexOf($("#manycar").val())>=0){
+			if(arrmany[i]=="0"){
+				$("#carmany").append("<option value='0' >--选择车辆--</option>");
+			}else{
+				$("#carmany").append("<option value='"+arrmany[i]+"' >"+arrmany[i]+"</option>");
+			}
+		}
+	}
+}
+var manyvehis = new Array(); 
+var manysms = new Array(); 
+var manyems = new Array(); 
+function addmany(){
+	gettablecars();
+	for(var s in manyvehis){
+		if(manyvehis[s]==$("#carmany").val()){
+			alert("该车辆已存在");
+			return;
+		}else if($("#carmany").val()=="0"){
+			return;
+		}
+	}
+	var mydate = new Date();
+	var smydate = new Date(mydate.getTime() - 1000 * 60 * 10);
+	manyvehis.push($("#carmany").val());
+	manysms.push(setformatmany(smydate));
+	manyems.push(setformatmany(mydate));
+	addmanytable();
+	$("#carnumidmany").html(manyvehis.length);
+	var mcs="";
+	for(var s in manyvehis){
+		mcs+=manyvehis[s]+";";
+	}
+	getvehimanydwmsg(mcs);
+	querymanyhis($("#carmany").val(),setformatmany(smydate));
+	//monitorallmany();
+}
+
+function gettablecars(){
+	manyvehis = new Array();
+	manysms = new Array();
+	manyems = new Array();
+	$("[name='mcarname']").each(function () {
+         var val = $(this).text(); //获取单个value
+         manyvehis.push(val);
+     });
+	$("[name='mcartime']").each(function () {
+        var val = $(this).text(); //获取单个value
+        manyems.push(val);
+        var et = getDate(val);
+        var st = new Date(et.getTime() - 1000 * 60 * 10);
+        manysms.push(setformatmany(st));
+        
+    });
+}
+function getDate(strDate) {
+    var date = eval('new Date(' + strDate.replace(/\d+(?=-[^-]+$)/,
+     function (a) { return parseInt(a, 10) - 1; }).match(/\d+/g) + ')');
+    return date;
+}
+function addmanytable(){
+	var trdaa="";
+	for(var s in manyvehis){
+		trdaa+="<tr ><td name='mcarname'>"+manyvehis[s]+"</td><td name='mcartime'>"+manyems[s]+"</td><td><img src='img/delete.png' onclick='deletemanyone(this.id)' id='"+manyvehis[s]+"'></td></tr>";
+	}
+	$("#datamany").html(trdaa);
+}
+
+function deletemanyone(obj){
+	for(var s in manyvehis){
+		if(obj==manyvehis[s]){
+			manyvehis.splice(s,1);
+			manysms.splice(s,1);
+			manyems.splice(s,1);
+			break;
+		}
+	}
+	$("#carnumidmany").html(manyvehis.length);
+	var mcs="";
+	for(var s in manyvehis){
+		mcs+=manyvehis[s]+";";
+	}
+	getvehimanydwmsg(mcs);
+	addmanytable();
+}
+
+//取得监控车辆的10分钟历史轨迹
+var vehigpsmany=null;
+function querymanyhis(obj,objtime){
+	
+	var mydate = new Date();
+	//var smydate = new Date(mydate.getTime() - 1000 * 60 * 10);
+	$.ajax({
+			url : 'history.action',
+			type : 'post',
+			data:{
+				"vehiid" : obj,
+				"stime" : objtime,
+				"etime" : setformatmany(mydate)
+			},
+			dataType: 'json',
+			timeout : 180000,
+			success:function(json){
+				vehigpsmany=null;
+				vehigpsmany = json.vehigps;
+				
+				if(vehigpsmany.length!=0){
+					for(var i=0;i<vehigpsmany.length;i++){
+						if(i==0){
+							addmksmanyhisstart(vehigpsmany[i]);
+						}else{
+							addmksmanyhis(vehigpsmany[i]);
+						}
+					}
+					completeEventHandlermany(vehigpsmany);
+				}else{
+				}
+			},
+			error:function(){
+			}		
+		});
+	}
+
+function completeEventHandlermany(vehigpsmany){ 
+	var markerhistorym=null;
+	var markerContent = document.createElement("div");
+    markerContent.className = "markerContentStyle";
+    var markerImg= document.createElement("img");
+	markerImg.className="markerlnglat";
+	if(vehigpsmany[vehigpsmany.length-1].carstate=="空车"){
+		markerImg.src="img/car2.png";   
+	}else if(vehigpsmany[vehigpsmany.length-1].carstate=="重车"){
+		markerImg.src="img/car.png";   
+	}
+	markerContent.appendChild(markerImg);
+	var markerSpan = document.createElement("span");
+	markerSpan.innerHTML = vehigpsmany[0].vehinum;
+	markerContent.appendChild(markerSpan);
+	
+	//if(vehigpsmany[vehigpsmany.length-1].carstate=="空车"){
+		markerhistorym = new AMap.Marker({
+	        map:mapObjmany,
+	        //draggable:true, //是否可拖动
+	        position:new AMap.LngLat(vehigpsmany[vehigpsmany.length-1].longi,vehigpsmany[vehigpsmany.length-1].lati),//基点位置
+	  //      icon:"img/car2.png", //marker图标，直接传递地址url
+	        zIndex:101,
+	        offset:new AMap.Pixel(-26,-14), //相对于基点的位置
+	     //   angle:vehigpsmany[vehigpsmany.length-1].direction-90,
+	        autoRotation:true,
+	        content:markerContent
+	    });
+	//}else if(vehigpsmany[vehigpsmany.length-1].carstate=="重车"){
+	//	markerhistorym = new AMap.Marker({
+	//        map:mapObjmany,
+	        //draggable:true, //是否可拖动
+	 //       position:new AMap.LngLat(vehigpsmany[vehigpsmany.length-1].longi,vehigpsmany[vehigpsmany.length-1].lati),//基点位置
+	//       icon:"img/car.png", //marker图标，直接传递地址url
+	//        zIndex:101,
+	//        offset:new AMap.Pixel(-26,-14), //相对于基点的位置
+	       // angle:vehigpsmany[vehigpsmany.length-1].direction-90,
+	 //       autoRotation:true,
+	 //       content:markerContent
+	//    });
+	//}
+	//markerhistorym.id="mkcar"+obj.vehinum;
+//	alert(markerhistorym.getExtData("id"));
+	var manylineArr = new Array();
+    for (var i = 0; i <vehigpsmany.length; i++){
+    	var lngX=vehigpsmany[i].longi;
+    	var lngY=vehigpsmany[i].lati;
+    	if(i>0){
+	    	var longi0 = vehigpsmany[i-1].longi;
+	    	var lati0 = vehigpsmany[i-1].lati;
+	    	if(lngX!=longi0||lngY!=lati0){
+	    		manylineArr.push(new AMap.LngLat(lngX,lngY));
+		    }else{
+			  //  alert(lngY+"   "+(parseFloat(vehigps[i].lati)+0.00001));
+		    	lngY=parseFloat(vehigpsmany[i].lati)+0.00001*i;
+		    	manylineArr.push(new AMap.LngLat(lngX,lngY));
+			}
+	    }else{
+	    	manylineArr.push(new AMap.LngLat(lngX,lngY));
+		}
+    }
+    //绘制轨迹
+    var polylinem = new AMap.Polyline({
+        map:mapObjmany,
+        path:manylineArr,
+        strokeColor:"#000000",//线颜色
+        strokeOpacity:1,//线透明度
+        strokeWeight:3,//线宽
+        strokeStyle:"solid"//线样式
+    });
+    if(vehigpsmany[0].vehinum==manyvehis[manyvehis.length-1]){
+    	mapObjmany.setFitView();
+	}
+  }
+
+function addmksmanyhis(obj){
+	var markerContent = document.createElement("div");
+    markerContent.className = "markerContentStyle";
+    //点标记中的图标
+    var markerImg= document.createElement("img");
+	markerImg.className="markerlnglat";
+	markerImg.src="img/fx.jpg";   
+	markerImg.id="img"+obj.messageid;
+	markerContent.appendChild(markerImg);
+  var txt = "<b style='color:#3399FF'>"+obj.vehinum+"</b><br/><br/><b>[GPS时间]</b>："+obj.speedtime
+  				  +"<br/><b>[车辆状态]</b>："+obj.carstate
+				  +"<br/><b>[GPS速度]</b>："+obj.speed
+				  +"<br/><b>[行驶方向]</b>："+dlwzmany(obj.direction)
+				  +"<br/><b>[经纬度]</b>："+obj.longi+","+obj.lati
+				  +"<br/><b>[位置描述]</b>："+obj.address;
+				  var marker1 =null;
+if(obj.carstate=="空车"){
+	var marker1 = new AMap.Marker({
+	    //map:mapObjhistory,
+	    position:new AMap.LngLat(obj.longi,obj.lati),     
+	    offset:new AMap.Pixel(-14,-7), //相对于基点的偏移位置
+	    draggable:false,  //是否可拖动
+	    icon:"img/fx.jpg",
+	  //  content:markerContent,   //自定义点标记覆盖物内容
+	    angle:obj.direction-90
+	});
+	}else if(obj.carstate=="重车"){
+		var marker1 = new AMap.Marker({
+		    //map:mapObjhistory,
+		    position:new AMap.LngLat(obj.longi,obj.lati),     
+		    offset:new AMap.Pixel(-14,-7), //相对于基点的偏移位置
+		    draggable:false,  //是否可拖动
+		    icon:"img/fx2.png",
+		  //  content:markerContent,   //自定义点标记覆盖物内容
+		    angle:obj.direction-90
+		});
+		}
+	//$("#img"+obj.messageid).rotate(obj.direction-90);
+	//marker1.setExtData("id":"mk"+obj.vehinum);
+	
+	marker1.setMap(mapObjmany);  //在地图上添加点
+
+	//添加文本标记
+	var info = [];                 
+	info.push(txt);                 
+	               
+	var inforWindow = new AMap.InfoWindow({                 
+	  offset:new AMap.Pixel(0,0),                 
+	  content:info.join("<br>")                 
+	});                 
+	  AMap.event.addListener(marker1,"click",function(e){                 
+		  inforWindow.open(mapObjmany,marker1.getPosition());                 
+		});
+
+	//添加角度		
+	//markerlist.push(marker1);
+}
+
+function addmksmanyhisstart(obj){
+	var markerContent = document.createElement("div");
+    markerContent.className = "markerContentStyle";
+    //点标记中的图标
+    var markerImg= document.createElement("img");
+	markerImg.className="markerlnglat";
+	markerImg.src="img/start.png";   
+	markerImg.id="img"+obj.messageid
+	markerContent.appendChild(markerImg);
+  var txt = "<b style='color:#3399FF'>"+obj.vehinum+"(起点)</b><br/><br/><b>[GPS时间]</b>："+obj.speedtime
+  				  +"<br/><b>[车辆状态]</b>："+obj.carstate
+				  +"<br/><b>[GPS速度]</b>："+obj.speed
+				  +"<br/><b>[行驶方向]</b>："+dlwzmany(obj.direction)
+				  +"<br/><b>[经纬度]</b>："+obj.longi+","+obj.lati
+				  +"<br/><b>[位置描述]</b>："+obj.address;
+	var marker1 = new AMap.Marker({
+	    position:new AMap.LngLat(obj.longi,obj.lati),   
+	    zIndex:102,  
+	    offset:new AMap.Pixel(-20,-40), //相对于基点的偏移位置
+	    draggable:false,  //是否可拖动
+	    content:markerContent   //自定义点标记覆盖物内容
+	});
+	//$("#img"+obj.messageid).rotate(obj.direction-90);
+	marker1.setMap(mapObjmany);  //在地图上添加点
+
+	//添加文本标记
+	var info = [];                 
+	info.push(txt);                 
+	               
+	var inforWindow = new AMap.InfoWindow({                 
+	  offset:new AMap.Pixel(0,0),                 
+	  content:info.join("<br>")                 
+	});                 
+	  AMap.event.addListener(marker1,"click",function(e){                 
+		  inforWindow.open(mapObjmany,marker1.getPosition());                 
+		});
+}
+
+function getmanymsg(obj,mangxh){
+	
+	$.ajax({
+		url : 'finddwvhic.action',
+		type : 'post',
+		data:{
+			"vehiid" : obj
+		},
+		dataType: 'json',
+		timeout : 180000,
+		success:function(json){
+			var vehidwgps = json.vehilist;
+			var trdata="";
+			for(var i=0;i<vehidwgps.length;i++){
+				trdata +="<tr id='down"+vehidwgps[i].vehino+"' ondblclick='monitormany(this.id)'><td>"+mangxh+"</td><td nowrap='nowrap'>"+vehidwgps[i].vehino+"</td><td nowrap='nowrap'>"+vehidwgps[i].color+"</td><td nowrap='nowrap'>"+vehidwgps[i].compname+"</td><td nowrap='nowrap'>"+vehidwgps[i].vehisim+"</td><td nowrap='nowrap'>"+vehidwgps[i].speed+"</td><td nowrap='nowrap'>"+vehidwgps[i].carStatus+"</td><td nowrap='nowrap'>"+vehidwgps[i].dateTime+"</td><td nowrap='nowrap'>"+vehidwgps[i].address+"</td><td nowrap='nowrap'>"+vehidwgps[i].mdtno+"</td><td nowrap='nowrap'>"+vehidwgps[i].cartype+"</td></tr>";
+			}
+			$("#dw_datamany").append(trdata);
+		},
+		error:function(){
+		}		
+	});
+}
+
+var mdtmany;
+function monitormany(obj){
+		var carid = obj;
+		$.ajax({
+			url : 'monitor.action',
+			type : 'post',
+			data:{
+				"vehiid" : carid
+			},
+			dataType: 'json',
+			timeout : 180000,
+			success:function(json){
+				mdtmany = json.mdt;
+				addMarkermany(mdtmany);
+			},
+			error:function(){
+				
+			}		
+		});
+}
+function monitormany2(obj){
+	var carid = obj;
+	$.ajax({
+		url : 'monitor.action',
+		type : 'post',
+		data:{
+			"vehiid" : carid
+		},
+		dataType: 'json',
+		timeout : 180000,
+		success:function(json){
+			mdtmany = json.mdt;
+			addMarkermany2(mdtmany);
+		},
+		error:function(){
+			
+		}		
+	});
+}
+
+function addMarkermany(mdtmany){
+	if(markermany!=""){
+		markermany.setMap(null);
+	}
+//	ngeocoder(mdt.longi,mdt.lati);
+	var markerContent = document.createElement("div");
+    markerContent.className = "markerContentStyle";
+    //点标记中的图标
+    var markerImg= document.createElement("img");
+	markerImg.className="markerlnglat";
+	if(mdtmany.carStatus=="空车"){
+			markerImg.src="img/fx.jpg";   
+	}else if(mdtmany.carStatus=="重车"){
+		markerImg.src="img/fx2.png";   
+	}
+	markerImg.id=mdtmany.messageid
+	markerContent.appendChild(markerImg);
+	markermany = new AMap.Marker({
+	    map:mapObjmany,
+	    position:new AMap.LngLat(mdtmany.longi,mdtmany.lati),     
+	    offset:new AMap.Pixel(-0,-0), //相对于基点的偏移位置
+	    draggable:false,  //是否可拖动
+	    content:markerContent,   //自定义点标记覆盖物内容
+	    angle:mdtmany.heading-90
+	});
+	mapObjmany.setCenter(new AMap.LngLat(mdtmany.longi,mdtmany.lati));
+	var txt = "<b style='color:#3399FF'>"+mdtmany.vehino+"</b><br/><b>[所属公司]</b>："+mdtmany.compname+"<br/><b>[车辆类型]</b>："+mdtmany.cartype+"<br/><b>[车辆颜色]</b>："+mdtmany.color+"<br/><b>[SIM卡]</b>："+mdtmany.vehisim+"<br/><b>[车辆所属人]</b>："+mdtmany.ownname
+					  +"<br/><b>[联系电话]</b>："+mdtmany.owntel+"<br/><b>[经度]</b>："+mdtmany.longi+"<br/><b>[纬度]</b>："+mdtmany.lati+"<br/><b>[所在位置]</b>："+mdtmany.address;
+	var info = [];                 
+	info.push(txt);                 
+	               
+	var inforWindowonemany = new AMap.InfoWindow({                 
+	  offset:new AMap.Pixel(0,0),                 
+	  content:info.join("<br>")                 
+	});           
+	  inforWindowonemany.open(mapObjmany,markermany.getPosition());                 
+	  AMap.event.addListener(markermany,"click",function(e){                 
+		  inforWindowonemany.open(mapObjmany,markermany.getPosition());                 
+		});
+}
+function addMarkermany2(mdtmany){
+	if(mdtmany.longi!=null&&mdtmany.lati!=null){
+	var markerContent = document.createElement("div");
+    markerContent.className = "markerContentStyle";
+    //点标记中的图标
+    var markerImg= document.createElement("img");
+	markerImg.className="markerlnglat";
+	if(mdtmany.carStatus=="空车"){
+			markerImg.src="img/fx.jpg";   
+	}else if(mdtmany.carStatus=="重车"){
+		markerImg.src="img/fx2.png";   
+	}
+	markerImg.id=mdtmany.messageid
+	markerContent.appendChild(markerImg);
+	markermany = new AMap.Marker({
+	    map:mapObjmany,
+	    position:new AMap.LngLat(mdtmany.longi,mdtmany.lati),     
+	    offset:new AMap.Pixel(-0,-0), //相对于基点的偏移位置
+	    draggable:false,  //是否可拖动
+	    content:markerContent,   //自定义点标记覆盖物内容
+	    angle:mdtmany.heading-90
+	});
+	$("#mkcar"+mdtmany.vehino).setPosition(new AMap.LngLat(mdtmany.longi,mdtmany.lati));
+	}
+}
+//实时监控选中的车
+
+monitorallmany();
+function monitorallmany(){
+	if(sms3!=null&&manysmsbz==1){
+		clearTimeout(sms3);
+		return;
+		}
+	if(manyvehis.length==0){
+		mapObjmany.clearMap();
+	}else{
+		var mcs="";
+		mapObjmany.clearMap();
+		for(var s in manyvehis){
+			mcs+=manyvehis[s]+";";
+			querymanyhis(manyvehis[s],manysms[s]);
+		}
+		getvehimanydwmsg(mcs);
+	}
+	if(manysmsbz==0){
+		sms3 = setTimeout("monitorallmany()",25000);
+	}else if(manysmsbz==1){
+		//alert("暂停");
+	}
+}
+
+function getvehimanydwmsg(carids){
+	$.ajax({
+		url : 'finddwvhic.action',
+		type : 'post',
+		data:{
+			"vehiid" : carids,
+			"iscomp" : 0
+		},
+		dataType: 'json',
+		timeout : 180000,
+		success:function(json){
+			$("#dw_datamany").html("<tr><td align='center' colspan='11'><img src='img/select2-spinner.gif' /></td></tr>");
+			var vehidwgps = json.vehilist;
+			var trdata="";
+			for(var i=0;i<vehidwgps.length;i++){
+				var kzc ="";
+				if(vehidwgps[i].onoffstate=="1"){
+					kzc ="上线";
+				}else{
+					kzc ="下线";
+				}
+				trdata +="<tr id='"+vehidwgps[i].vehino+"' ondblclick='monitor(this.id)'><td>"+(i+1)+"</td><td nowrap='nowrap'>"+vehidwgps[i].vehino+"</td><td nowrap='nowrap'>"+vehidwgps[i].color+"</td><td nowrap='nowrap'>"+vehidwgps[i].compname+"</td><td nowrap='nowrap'>"+vehidwgps[i].vehisim+"</td><td nowrap='nowrap'>"+vehidwgps[i].speed+"</td><td nowrap='nowrap'>"+kzc+"</td><td nowrap='nowrap'>"+vehidwgps[i].dateTime+"</td><td nowrap='nowrap'>"+vehidwgps[i].address+"</td><td nowrap='nowrap'>"+vehidwgps[i].mdtno+"</td><td nowrap='nowrap'>"+vehidwgps[i].cartype+"</td></tr>";
+			}
+			$("#dw_datamany").html(trdata);
+		},
+		error:function(){
+			
+		}		
+	});
+}
+
+
+</script>
+<script type="text/javascript" language="javascript">  
+	function switchSysBar1many(){
+		if ($("#switchPoint1many").val()=="3"){
+			$("#switchPoint1many").val("4");
+			$("#monitortabsmany").css('display','none'); 
+			 $("#mapdivmany").height("100%"); 
+			$("#utodmany").attr("class", "fa fa-chevron-up");
+		}
+		else{
+			$("#switchPoint1many").val("3");
+			$("#monitortabsmany").css('display','block');
+			 $("#mapdivmany").height("65%"); 
+			$("#utodmany").attr("class", "fa fa-chevron-down");
+		}
+	}
+
+	function switchSysBarmany(){
+		if ($("#switchPointmany").val()=="3"){
+			$("#switchPointmany").val("4");
+			$("#monirightmany").css('display','none'); 
+			$("#lefttdmany").width("98%"); 
+			$("#ltormany").attr("class", "fa fa-chevron-left");
+		}
+		else{
+			$("#switchPointmany").val("3");
+			$("#monirightmany").css('display','block');
+			$("#lefttdmany").width("74%"); 
+			$("#ltormany").attr("class", "fa fa-chevron-right");
+		}
+	}
+
+	function dlwzmany(obj){
+		if(obj==0||obj==360){
+			return "正北";
+		}else if(obj==90){
+			return "正东";
+		}else if(obj==180){
+			return "正南";
+		}else if(obj==270){
+			return "正西";
+		}else if(obj>0&&obj<90){
+			return "东北";
+		}else if(obj>90&&obj<180){
+			return "东南";
+		}else if(obj>180&&obj<270){
+			return "西南";
+		}else if(obj>270&&obj<360){
+			return "西北";
+		}
+	}
+</script>  
+
+<style>
+.txtstyle{position:relative;background: rgba(255,204,51, 0.5);}
+.txtstyle span{
+white-space:nowrap;
+	display:block;
+	text-align:left;
+	background-color: #FFCC66;
+	color:black;
+	width:auto;
+	border:1px solid #ffffff;
+	FONT-FAMILY:微软雅黑;
+	position:absolute;
+	top:-10px;left:25px;
+	white-space:nowrap webkit-border-radius:5px;
+	border-radius:5px;
+}
+td,th{ nowrap:nowrap;}
+.markerContentStyle{position:relative;filter: Alpha(Opacity=0)}
+.markerContentStyle span{white-space:nowrap;
+	display:block;
+	text-align:left;
+	background-color: #3399CC;
+	color:#FFFFFF;
+	width:auto;
+	border:1px solid #3399CC;
+	FONT-FAMILY:微软雅黑;
+	position:absolute;
+	top:25px;left:-20px;
+	white-space:nowrap webkit-border-radius:5px;
+	border-radius:5px;}
+td,th{ nowrap:nowrap;}
+</style>
+<script language="javascript" type="text/javascript" src="js/jquery.ztree.core-3.5.js"></script>
+	<link type="text/css" rel="stylesheet" href="css/zTreeStyle/zTreeStyle.css" />  
+	<script language="javascript" type="text/javascript" src="js/jquery.ztree.excheck-3.5.js"></script> 
+<link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.min.css">

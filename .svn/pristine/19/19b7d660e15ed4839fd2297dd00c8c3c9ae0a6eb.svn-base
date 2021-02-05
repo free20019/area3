@@ -1,0 +1,23 @@
+package com.ze.util;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import com.tw.dao.PublicDao;
+import com.tw.entity.Area;
+
+public class test {
+	public static void main(String[] args) {
+		PublicDao p=new PublicDao();
+		List<Area>areaall=p.findareaall();
+		String areasql="";
+		for (int i = 0; i < areaall.size(); i++) {
+			if (i==0) {
+				areasql+=" area_id ='"+areaall.get(i).getArea_id()+"'";
+			}else {
+				areasql+=" or area_id ='"+areaall.get(i).getArea_id()+"'";
+			}
+		}
+		System.out.println(areasql);
+	}
+}

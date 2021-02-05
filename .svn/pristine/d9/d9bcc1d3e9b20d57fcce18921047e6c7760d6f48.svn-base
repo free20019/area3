@@ -1,0 +1,714 @@
+package com.tw.dao;
+
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import com.tw.entity.LOADONLINE;
+import com.ze.util.DataBese;
+
+
+public class ShiZaiDao {
+		public List<LOADONLINE>findshizai(String time,int i){
+			SimpleDateFormat dft = new SimpleDateFormat("yyyy-MM-dd");
+			String jintian=null,zuotian=null,qiantian=null,shangzhou=null,shangyue=null,shangnian=null;
+			try {
+			Date beginDate = dft.parse(time);
+			jintian=time;
+			Calendar date = Calendar.getInstance();
+			date.setTime(beginDate);
+			date.set(Calendar.DATE, date.get(Calendar.DATE) - 1);
+			Date endDate;
+				endDate = dft.parse(dft.format(date.getTime()));
+			zuotian=dft.format(endDate);
+			Calendar date7 = Calendar.getInstance();
+			date7.setTime(beginDate);
+			date7.set(Calendar.DATE, date7.get(Calendar.DATE) - 2);
+			Date date8=dft.parse(dft.format(date7.getTime()));
+			qiantian=dft.format(date8);
+			Calendar date3 = Calendar.getInstance();
+			date3.setTime(beginDate);
+			date3.set(Calendar.DATE, date3.get(Calendar.DATE) - 7);
+			Date date4=dft.parse(dft.format(date3.getTime()));
+			shangzhou=dft.format(date4);
+			Calendar cal = Calendar.getInstance();
+			cal.set(Calendar.DAY_OF_MONTH, 1);
+			cal.add(Calendar.DAY_OF_MONTH, -1);
+			int riqi=cal.get(Calendar.DAY_OF_MONTH);
+		    Calendar date1 = Calendar.getInstance();
+			date1.setTime(beginDate);
+			date1.set(Calendar.DATE, date1.get(Calendar.DATE) - riqi);
+			Date date2=dft.parse(dft.format(date1.getTime()));
+			shangyue=dft.format(date2);
+			Calendar date5 = Calendar.getInstance();
+			date5.setTime(beginDate);
+			date5.set(Calendar.DATE, date5.get(Calendar.DATE) - 365);
+			Date date6=dft.parse(dft.format(date5.getTime()));
+			shangnian=dft.format(date6);
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+			}
+			String d=null;
+			if (i==0) {
+				d=shangnian;
+			}else if (i==1) {
+				d=shangyue;
+			}else if (i==2) {
+				d=shangzhou;
+			}else if(i==3){
+				d=qiantian;
+			}else if (i==4) {
+				d=zuotian;
+			}else if (i==5) {
+				d=jintian;
+			}
+			List<LOADONLINE>list=new ArrayList<LOADONLINE>();
+			String sql="select * from  TB_TAXI_RUN_INFO_RECORD_test where" +
+					" db_time>=to_date('"+d+" 00:00:00','yyyy-MM-dd HH24:mi:ss') and" +
+					" db_time<=to_date('"+d+" 23:59:59','yyyy-MM-dd HH24:mi:ss') order by db_time";
+			try {
+				String dbtime=null;
+				Connection con=DataBese.getConnectionOfOracle();
+				PreparedStatement ps=con.prepareStatement(sql);
+				ResultSet rs=ps.executeQuery();
+				while (rs.next()) {
+					LOADONLINE l=new LOADONLINE();
+					dbtime=rs.getString("db_time");
+						if (dbtime.length()==10||dbtime.substring(11	, 16).equals("00:00")||dbtime.substring(11	, 16).equals("01:00")||dbtime.substring(11	, 16).equals("02:00")||dbtime.substring(11	, 16).equals("03:00")||dbtime.substring(11	, 16).equals("04:00")||dbtime.substring(11	, 16).equals("05:00")||dbtime.substring(11	, 16).equals("06:00")||dbtime.substring(11	, 16).equals("07:00")||dbtime.substring(11	, 16).equals("08:00")||dbtime.substring(11	, 16).equals("09:00")||dbtime.substring(11	, 16).equals("10:00")||dbtime.substring(11	, 16).equals("11:00")||dbtime.substring(11	, 16).equals("12:00")||dbtime.substring(11	, 16).equals("13:00")||dbtime.substring(11	, 16).equals("14:00")||dbtime.substring(11	, 16).equals("15:00")||dbtime.substring(11	, 16).equals("16:00")||dbtime.substring(11	, 16).equals("17:00")||dbtime.substring(11	, 16).equals("18:00")||dbtime.substring(11	, 16).equals("19:00")||dbtime.substring(11	, 16).equals("20:00")||dbtime.substring(11	, 16).equals("21:00")||dbtime.substring(11	, 16).equals("22:00")||dbtime.substring(11	, 16).equals("23:00")) {
+							l.setRun_rate(rs.getString("actual_load_rate"));
+							l.setRun_profit(rs.getString("run_profit"));
+							l.setActual_load_mileage(rs.getString("actual_load_mileage")+"");
+							l.setNo_load_mileage(rs.getString("no_load_mileage")+"");
+							l.setRun_time(rs.getString("run_time"));
+							l.setWaitting_time(rs.getString("waitting_time"));
+							l.setRun_times(rs.getString("run_times"));
+							double a=Double.parseDouble(rs.getString("actual_load_mileage"))+Double.parseDouble(rs.getString("no_load_mileage"));
+							BigDecimal bg = new BigDecimal(a);
+							double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+							l.setZlc(f1+"");
+							list.add(l);
+							}
+				}
+				rs.close();
+				ps.close();
+				con.commit();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return list;
+		}
+		public double findmeiyou(int i){
+			int count=0;
+			String stime="",etime="";
+			if (i==0) {
+				 Calendar calendar = Calendar.getInstance();
+			     calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) - 6);
+			     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			     stime= df.format(calendar.getTime()).substring(0, 14)+"00:00";
+		        Calendar calendar1 = Calendar.getInstance();
+		        calendar1.set(Calendar.HOUR_OF_DAY, calendar1.get(Calendar.HOUR_OF_DAY) - 5);
+		        SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		        etime= df1.format(calendar1.getTime()).substring(0, 14)+"00:00";
+			}else if (i==1) {
+				Calendar calendar = Calendar.getInstance();
+			     calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) - 5);
+			     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			     stime= df.format(calendar.getTime()).substring(0, 14)+"00:00";
+		        Calendar calendar1 = Calendar.getInstance();
+		        calendar1.set(Calendar.HOUR_OF_DAY, calendar1.get(Calendar.HOUR_OF_DAY) - 4);
+		        SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		        etime= df1.format(calendar1.getTime()).substring(0, 14)+"00:00";
+			}else if (i==2) {
+				Calendar calendar = Calendar.getInstance();
+			     calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) - 4);
+			     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			     stime= df.format(calendar.getTime()).substring(0, 14)+"00:00";
+		        Calendar calendar1 = Calendar.getInstance();
+		        calendar1.set(Calendar.HOUR_OF_DAY, calendar1.get(Calendar.HOUR_OF_DAY) - 3);
+		        SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		        etime= df1.format(calendar1.getTime()).substring(0, 14)+"00:00";
+			}else if (i==3) {
+				Calendar calendar = Calendar.getInstance();
+			     calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) - 3);
+			     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			     stime= df.format(calendar.getTime()).substring(0, 14)+"00:00";
+		        Calendar calendar1 = Calendar.getInstance();
+		        calendar1.set(Calendar.HOUR_OF_DAY, calendar1.get(Calendar.HOUR_OF_DAY) - 2);
+		        SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		        etime= df1.format(calendar1.getTime()).substring(0, 14)+"00:00";
+			}else if (i==4) {
+				Calendar calendar = Calendar.getInstance();
+			     calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) - 2);
+			     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			     stime= df.format(calendar.getTime()).substring(0, 14)+"00:00";
+		        Calendar calendar1 = Calendar.getInstance();
+		        calendar1.set(Calendar.HOUR_OF_DAY, calendar1.get(Calendar.HOUR_OF_DAY) - 1);
+		        SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		        etime= df1.format(calendar1.getTime()).substring(0, 14)+"00:00";
+			}else if (i==5) {
+				Calendar calendar = Calendar.getInstance();
+			     calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) - 1);
+			     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			     stime= df.format(calendar.getTime()).substring(0, 14)+"00:00";
+			     Date d=new Date();
+		        SimpleDateFormat df1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		        etime= df1.format(d).substring(0, 14)+"00:00";
+			}
+			String sj=stime.substring(0,4);
+			String sql="select sum(jicheng) jicheng,sum(kongshi)  kongshi from HZGPS_CITIZEN.TB_CITIZEN_"+sj+"@TAXILINK45 t" +
+					" where shangche>=to_date('"+stime+"','yyyy-MM-dd hh24:mi:ss')" +
+					" and  shangche<to_date('"+etime+"','yyyy-MM-dd hh24:mi:ss')";
+			System.out.println(sql);
+			double totalpage=0;
+			PreparedStatement ps=null;
+			ResultSet rs=null;
+			Connection con=null;
+			double f1=0;
+			try {
+				con=DataBese.getConnectionOfOracle();
+				ps = con.prepareStatement(sql);
+				rs=ps.executeQuery();
+				if (rs.next()) {
+					totalpage=(rs.getDouble("jicheng")/(rs.getDouble("jicheng")+rs.getDouble("kongshi")))*100;
+					BigDecimal bg = new BigDecimal(totalpage);
+					f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				}
+				rs.close();
+				ps.close();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return f1;
+		}
+		public List<LOADONLINE>findaverage(String time){
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); // 设置时间格式
+			Calendar calendar = Calendar.getInstance();
+			try {
+				calendar.setTime(sdf.parse(time));
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+			}
+	        calendar.setFirstDayOfWeek(Calendar.MONDAY);
+
+	        calendar.add(Calendar.DATE, -7);
+	        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+	        Date    sTime = calendar.getTime();
+	        calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+	        Date    eTime = calendar.getTime();
+	        String st = sdf.format(sTime) + " 00:00:00";
+	        String et = sdf.format(eTime) + " 23:59:59";
+	    
+			List<LOADONLINE>list=new ArrayList<LOADONLINE>();
+			String sql="select * from TB_TAXI_RUN_INFO_RECORD_test t where db_time>=to_date('"+st+"','yyyy-MM-dd HH24:mi:ss')" +
+					" and db_time<=to_date('"+et+"','yyyy-MM-dd HH24:mi:ss')";
+			try {
+				Connection con=DataBese.getConnectionOfOracle();
+				PreparedStatement ps=con.prepareStatement(sql);
+				ResultSet rs=ps.executeQuery();
+				while(rs.next()){
+					LOADONLINE l=new LOADONLINE();
+					l.setDb_time(rs.getString("db_time"));
+					l.setRun_rate(rs.getString("actual_load_rate"));
+					list.add(l);
+				}
+				rs.close();
+				ps.close();
+				con.commit();
+				con.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			LOADONLINE zhuanhuan=zhuanhuan(list);
+			List<LOADONLINE>list1=new ArrayList<LOADONLINE>();
+			list1.add(zhuanhuan);
+			return list1;
+		}
+		public LOADONLINE zhuanhuan(List<LOADONLINE> list){
+			LOADONLINE l=new LOADONLINE();
+			List<String>yingyun1=new ArrayList<String>();
+			List<String>yingyun2=new ArrayList<String>();
+			List<String>yingyun3=new ArrayList<String>();
+			List<String>yingyun4=new ArrayList<String>();
+			List<String>yingyun5=new ArrayList<String>();
+			List<String>yingyun6=new ArrayList<String>();
+			List<String>yingyun7=new ArrayList<String>();
+			List<String>yingyun8=new ArrayList<String>();
+			List<String>yingyun9=new ArrayList<String>();
+			List<String>yingyun10=new ArrayList<String>();
+			List<String>yingyun11=new ArrayList<String>();
+			List<String>yingyun12=new ArrayList<String>();
+			List<String>yingyun13=new ArrayList<String>();
+			List<String>yingyun14=new ArrayList<String>();
+			List<String>yingyun15=new ArrayList<String>();
+			List<String>yingyun16=new ArrayList<String>();
+			List<String>yingyun17=new ArrayList<String>();
+			List<String>yingyun18=new ArrayList<String>();
+			List<String>yingyun19=new ArrayList<String>();
+			List<String>yingyun20=new ArrayList<String>();
+			List<String>yingyun21=new ArrayList<String>();
+			List<String>yingyun22=new ArrayList<String>();
+			List<String>yingyun23=new ArrayList<String>();
+			List<String>yingyun24=new ArrayList<String>();
+			for (int i = 0; i < list.size(); i++) {
+				if (list.get(i).getDb_time().length()==10||list.get(i).getDb_time().substring(11,16).equals("00:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun1.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("01:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun2.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("02:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun3.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("03:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun4.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("04:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun5.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("05:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun6.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("06:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun7.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("07:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun8.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("08:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun9.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("09:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun10.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("10:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun11.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("11:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun12.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("12:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun13.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("13:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun14.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("14:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun15.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("15:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun16.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("16:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun17.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("17:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun18.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("18:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun19.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("19:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun20.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("20:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun21.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("21:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun22.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("22:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun23.add(list.get(i).getRun_rate());
+					}
+				}else if (list.get(i).getDb_time().substring(11,16).equals("23:00")) {
+					if (list.get(i).getRun_rate()!=null&&list.get(i).getRun_rate().length()>0&&list.get(i).getRun_rate()!="0") {
+						yingyun24.add(list.get(i).getRun_rate());
+					}
+				}
+			}
+			List<String >pingjunyingyun=new ArrayList<String>();
+			double b=0.0;
+			b=0;
+			if (yingyun1.size()>0) {
+				for (int j = 0; j < yingyun1.size(); j++) {
+					if(yingyun1.get(j).length()==6){
+						b+=Double.parseDouble(yingyun1.get(j).substring(0, 5))/100;
+					}
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun1.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(0, f1+"%");
+			}else {
+				pingjunyingyun.add(0, 0+"");
+			}
+			b=0.0;
+			if (yingyun2.size()>0) {
+				
+				for (int j = 0; j < yingyun2.size(); j++) {
+					if(yingyun2.get(j).length()==6){
+						b+=Double.parseDouble(yingyun2.get(j).substring(0, 5))/100;
+					}
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun2.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(1, f1+"%");
+			}else {
+				pingjunyingyun.add(1, 0+"");
+			}
+			b=0.0;
+			if (yingyun3.size()>0) {
+				
+				for (int j = 0; j < yingyun3.size(); j++) {
+					if(yingyun3.get(j).length()==6){
+						b+=Double.parseDouble(yingyun3.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun3.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(2, f1+"%");
+			}else {
+				pingjunyingyun.add(2, 0+"");
+			}
+			b=0.0;
+			if (yingyun4.size()>0) {
+				
+				for (int j = 0; j < yingyun4.size(); j++) {
+					if(yingyun4.get(j).length()==6){
+						b+=Double.parseDouble(yingyun4.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun4.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(3, f1+"%");
+			}else {
+				pingjunyingyun.add(3, 0+"");
+			}
+			b=0.0;
+			if (yingyun5.size()>0) {
+				for (int j = 0; j < yingyun5.size(); j++) {
+					if(yingyun5.get(j).length()==6){
+						b+=Double.parseDouble(yingyun5.get(j).substring(0, 5))/100;
+					}
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun5.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(4, f1+"%");
+			}else {
+				pingjunyingyun.add(4, 0+"");
+			}
+			b=0.0;
+			if (yingyun6.size()>0) {
+				
+				for (int j = 0; j < yingyun6.size(); j++) {
+					if(yingyun6.get(j).length()==6){
+						b+=Double.parseDouble(yingyun6.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun6.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(5, f1+"%");
+			}else{
+				pingjunyingyun.add(5, 0+"");
+			}
+				
+			b=0.0;
+			if (yingyun7.size()>0) {
+				
+				for (int j = 0; j < yingyun7.size(); j++) {
+					if(yingyun7.get(j).length()==6){
+						b+=Double.parseDouble(yingyun7.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun7.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(6, f1+"%");
+			}else {
+				pingjunyingyun.add(6, 0+"");
+			}
+			b=0.0;
+			if (yingyun8.size()>0) {
+				
+				for (int j = 0; j < yingyun8.size(); j++) {
+					if(yingyun8.get(j).length()==6){
+						b+=Double.parseDouble(yingyun8.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun8.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(7, f1+"%");
+			}else {
+				pingjunyingyun.add(7, 0+"");
+			}
+			b=0.0;
+			if (yingyun9.size()>0) {
+				
+				for (int j = 0; j < yingyun9.size(); j++) {
+					if(yingyun9.get(j).length()==6){
+						b+=Double.parseDouble(yingyun9.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun9.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(8, f1+"%");
+			}else {
+				pingjunyingyun.add(8, 0+"");
+			}
+			b=0.0;
+			if (yingyun10.size()>0) {
+				
+				for (int j = 0; j < yingyun10.size(); j++) {
+					if(yingyun10.get(j).length()==6){
+						b+=Double.parseDouble(yingyun10.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun10.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(9, f1+"%");
+			}else {
+				pingjunyingyun.add(9,0+"");
+			}
+			b=0.0;
+			if (yingyun11.size()>0) {
+				
+				for (int j = 0; j < yingyun11.size(); j++) {
+					if(yingyun11.get(j).length()==6){
+						b+=Double.parseDouble(yingyun11.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun11.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(10, f1+"%");
+			}else {
+				pingjunyingyun.add(10, 0+"");
+
+			}
+			b=0.0;
+			if (yingyun12.size()>0) {
+				
+				for (int j = 0; j < yingyun12.size(); j++) {
+					if(yingyun12.get(j).length()==6){
+						b+=Double.parseDouble(yingyun12.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun12.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(11, f1+"%");
+			}else {
+				pingjunyingyun.add(11, 0+"");
+			}
+			b=0.0;
+			if (yingyun13.size()>0) {
+				for (int j = 0; j < yingyun13.size(); j++) {
+					if(yingyun13.get(j).length()==6){
+						b+=Double.parseDouble(yingyun13.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun13.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(12, f1+"%");
+				
+			}else{
+				pingjunyingyun.add(12, 0+"");
+			}
+			b=0.0;
+			if (yingyun14.size()>0) {
+				
+				for (int j = 0; j < yingyun14.size(); j++) {
+					if(yingyun14.get(j).length()==6){
+						b+=Double.parseDouble(yingyun14.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun14.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(13, f1+"%");
+			}else {
+				pingjunyingyun.add(13, 0+"");
+			}
+			b=0.0;
+			if (yingyun15.size()>0) {
+				
+				for (int j = 0; j < yingyun15.size(); j++) {
+					if(yingyun15.get(j).length()==6){
+						b+=Double.parseDouble(yingyun15.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun15.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(14, f1+"%");
+			}else {
+				pingjunyingyun.add(14, 0+"");
+			}
+			b=0.0;
+			if (yingyun16.size()>0) {
+				for (int j = 0; j < yingyun16.size(); j++) {
+					if(yingyun16.get(j).length()==6){
+						b+=Double.parseDouble(yingyun16.get(j).substring(0, 5))/100;
+					}
+					
+				}
+				BigDecimal bg = new BigDecimal(b/yingyun16.size()*100);
+				double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+				pingjunyingyun.add(15,f1+"%");
+			}else {
+				pingjunyingyun.add(15, 0+"");
+			}
+			b=0.0;
+			if (yingyun17.size()>0) {
+			for (int j = 0; j < yingyun17.size(); j++) {
+				if(yingyun17.get(j).length()==6){
+					b+=Double.parseDouble(yingyun17.get(j).substring(0, 5))/100;
+				}
+				
+			}
+			BigDecimal bg = new BigDecimal(b/yingyun17.size()*100);
+			double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+			pingjunyingyun.add(16, f1+"%");
+			}else {
+				pingjunyingyun.add(16, 0+"");
+			}
+			b=0.0;
+			if (yingyun18.size()>0) {
+			for (int j = 0; j < yingyun18.size(); j++) {
+				if(yingyun18.get(j).length()==6){
+					b+=Double.parseDouble(yingyun18.get(j).substring(0, 5))/100;
+				}
+				
+			}
+			BigDecimal bg = new BigDecimal(b/yingyun18.size()*100);
+			double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+			pingjunyingyun.add(17, f1+"%");
+			}else {
+				pingjunyingyun.add(17, 0+"");
+			}
+			b=0.0;
+			if (yingyun19.size()>0) {
+			for (int j = 0; j < yingyun19.size(); j++) {
+				if(yingyun19.get(j).length()==6){
+					b+=Double.parseDouble(yingyun19.get(j).substring(0, 5))/100;
+				}
+				
+			}
+			BigDecimal bg = new BigDecimal(b/yingyun19.size()*100);
+			double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+			pingjunyingyun.add(18, f1+"%");
+			}else {
+				pingjunyingyun.add(18, 0+"");
+			}
+			b=0.0;
+			if (yingyun20.size()>0) {
+			for (int j = 0; j < yingyun20.size(); j++) {
+				if(yingyun20.get(j).length()==6){
+					b+=Double.parseDouble(yingyun20.get(j).substring(0, 5))/100;
+				}
+				
+			}
+			BigDecimal bg = new BigDecimal(b/yingyun20.size()*100);
+			double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+			pingjunyingyun.add(19, f1+"%");
+			}else {
+				pingjunyingyun.add(19, 0+"");
+			}
+			b=0.0;
+			if (yingyun21.size()>0) {
+			for (int j = 0; j < yingyun21.size(); j++) {
+				if(yingyun21.get(j).length()==6){
+					b+=Double.parseDouble(yingyun21.get(j).substring(0, 5))/100;
+				}
+				
+			}
+			BigDecimal bg = new BigDecimal(b/yingyun21.size()*100);
+			double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+			pingjunyingyun.add(20, f1+"%");
+			}else {
+				pingjunyingyun.add(20, 0+"");
+			}
+			b=0.0;
+			if (yingyun22.size()>0) {
+			for (int j = 0; j < yingyun22.size(); j++) {
+				if(yingyun22.get(j).length()==6){
+					b+=Double.parseDouble(yingyun22.get(j).substring(0, 5))/100;
+				}
+				
+			}
+			BigDecimal bg = new BigDecimal(b/yingyun22.size()*100);
+			double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+			pingjunyingyun.add(21, f1+"%");
+			}else {
+				pingjunyingyun.add(21, 0+"");
+			}
+			b=0.0;
+			if (yingyun23.size()>0) {
+			for (int j = 0; j < yingyun23.size(); j++) {
+				if(yingyun23.get(j).length()==6){
+					b+=Double.parseDouble(yingyun23.get(j).substring(0, 5))/100;
+				}
+				
+			}
+			BigDecimal bg = new BigDecimal(b/yingyun23.size()*100);
+			double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+			pingjunyingyun.add(22, f1+"%");
+			}else {
+				pingjunyingyun.add(22, 0+"");
+			}
+			b=0.0;
+			if (yingyun24.size()>0) {
+			for (int j = 0; j < yingyun24.size(); j++) {
+				if(yingyun24.get(j).length()==6){
+					b+=Double.parseDouble(yingyun24.get(j).substring(0, 5))/100;
+				}
+				
+			}
+			BigDecimal bg = new BigDecimal(b/yingyun24.size()*100);
+			double f1 = bg.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+			pingjunyingyun.add(23, f1+"%");
+		}else {
+			pingjunyingyun.add(23, 0+"");
+		}
+			l.setPjyingyun(pingjunyingyun);
+			return l;
+		}
+
+}

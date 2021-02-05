@@ -1,0 +1,229 @@
+package com.tw.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.crypto.Data;
+
+import sun.print.resources.serviceui;
+
+import com.tw.entity.SpringFestival;
+import com.ze.util.DataBese;
+
+public class SpringFestivalDao {
+	//杭州市出租车春运期间分布情况(每小时统计) 查询关键字日期
+	public List<SpringFestival> findHourFB(String time){
+		List<SpringFestival>list=new ArrayList<SpringFestival>();
+		String stime=time+" 00:00:00";
+		String etime=time+" 23:59:59";
+		String sql="select db_time time,sum(decode(areaid,'1',proportion,null)) henan," +
+				" sum(decode(areaid,'2',proportion,null)) anhui," +
+				" sum(decode(areaid,'3',proportion,null)) jiangxi," +
+				" sum(decode(areaid,'4',proportion,null)) zhejiang," +
+				" sum(decode(areaid,'5',proportion,null)) dahangzhou," +
+				" sum(decode(areaid,'6',proportion,null)) hangzhou" +
+				" from TB_TAXI_DISTRIBUTION  where" +
+				" db_time >= to_date('"+stime+"', 'yyyy-MM-dd HH24:mi:ss')" +
+				" and db_time <= to_date('"+etime+"', 'yyyy-MM-dd HH24:mi:ss')" +
+				" group by db_time order by db_time desc";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				SpringFestival s=new SpringFestival();
+				s.setAnhui(rs.getDouble("anhui"));
+				s.setDahangzhou(rs.getDouble("dahangzhou"));
+				s.setHangzhou(rs.getDouble("hangzhou"));
+				s.setHenan(rs.getDouble("henan"));
+				s.setJiangxi(rs.getDouble("jiangxi"));
+				s.setTime(rs.getString("time").substring(0, 19));
+				s.setZhejiang(rs.getDouble("zhejiang"));
+				list.add(s);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//杭州市出租车春运期间分布情况(每日统计)
+	public List<SpringFestival>finddayfx(){
+		List<SpringFestival>list = new ArrayList<SpringFestival>();
+		String sql="select statisticaldate time," +
+				" sum(decode(areaid, '1', proportion, null)) henan," +
+				" sum(decode(areaid, '2', proportion, null)) anhui," +
+				" sum(decode(areaid, '3', proportion, null)) jiangxi," +
+				" sum(decode(areaid, '4', proportion, null)) zhejiang," +
+				" sum(decode(areaid, '5', proportion, null)) dahangzhou," +
+				" sum(decode(areaid, '6', proportion, null)) hangzhou" +
+				" from TB_TAXI_DISTRIBUTION_DAY where" +
+				" (areaid = '1' or areaid = '2' or areaid = '3' or" +
+				" areaid = '4' or areaid = '5' or areaid = '6')" +
+				" group by statisticaldate";
+		try{
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				SpringFestival s=new SpringFestival();
+				s.setAnhui(rs.getDouble("anhui"));
+				s.setDahangzhou(rs.getDouble("dahangzhou"));
+				s.setHangzhou(rs.getDouble("hangzhou"));
+				s.setHenan(rs.getDouble("henan"));
+				s.setJiangxi(rs.getDouble("jiangxi"));
+				s.setTime(rs.getString("time").substring(0, 10));
+				s.setZhejiang(rs.getDouble("zhejiang"));
+				list.add(s);
+			}
+			rs.close();
+			rs.close();
+			con.close();
+		}catch(SQLException e){
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//重点区域小时服务车次统计(每小时统计)
+	public List<SpringFestival>findzdqyxstj(String time){
+		String stime=time+" 00:00:00";
+		String etime=time+" 23:59:59";
+		List<SpringFestival>list=new ArrayList<SpringFestival>();
+		String sql="select areaid," +
+				" sum(decode(to_char(begindate,'hh24'), '00', taxinum, null)) a00," +
+				" sum(decode(to_char(begindate,'hh24'), '01', taxinum, null)) a01," +
+				" sum(decode(to_char(begindate,'hh24'), '02', taxinum, null)) a02," +
+				" sum(decode(to_char(begindate,'hh24'), '03', taxinum, null)) a03," +
+				" sum(decode(to_char(begindate,'hh24'), '04', taxinum, null)) a04," +
+				" sum(decode(to_char(begindate,'hh24'), '05', taxinum, null)) a05," +
+				" sum(decode(to_char(begindate,'hh24'), '06', taxinum, null)) a06," +
+				" sum(decode(to_char(begindate,'hh24'), '07', taxinum, null)) a07," +
+				" sum(decode(to_char(begindate,'hh24'), '08', taxinum, null)) a08, " +
+				"sum(decode(to_char(begindate,'hh24'), '09', taxinum, null)) a09, " +
+				"sum(decode(to_char(begindate,'hh24'), '10', taxinum, null)) a10," +
+				"  sum(decode(to_char(begindate,'hh24'), '11', taxinum, null)) a11," +
+				" sum(decode(to_char(begindate,'hh24'), '12', taxinum, null)) a12," +
+				" sum(decode(to_char(begindate,'hh24'), '13', taxinum, null)) a13," +
+				" sum(decode(to_char(begindate,'hh24'), '14', taxinum, null)) a14," +
+				"  sum(decode(to_char(begindate,'hh24'), '15', taxinum, null)) a15," +
+				" sum(decode(to_char(begindate,'hh24'), '16', taxinum, null)) a16," +
+				" sum(decode(to_char(begindate,'hh24'), '17', taxinum, null)) a17," +
+				" sum(decode(to_char(begindate,'hh24'), '18', taxinum, null)) a18," +
+				"  sum(decode(to_char(begindate,'hh24'), '19', taxinum, null)) a19," +
+				" sum(decode(to_char(begindate,'hh24'), '20', taxinum, null)) a20," +
+				" sum(decode(to_char(begindate,'hh24'), '21', taxinum, null)) a21," +
+				"  sum(decode(to_char(begindate,'hh24'), '22', taxinum, null)) a22," +
+				" sum(decode(to_char(begindate,'hh24'), '23', taxinum, null)) a23" +
+				" from TB_TAXI_IMPORTANT_AREA where" +
+				" begindate >= to_date('"+stime+"', 'yyyy-MM-dd HH24:mi:ss')" +
+				" and begindate <= to_date('"+etime+"', 'yyyy-MM-dd HH24:mi:ss')" +
+				" group by areaid";
+		System.out.println(sql);
+		try{
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				SpringFestival s=new SpringFestival();
+				s.setArea(idzh(rs.getString("areaid")));
+				s.setA00(rs.getString("a00")==null?"&nbsp;":rs.getString("a00"));
+				s.setA01(rs.getString("a01")==null?"&nbsp;":rs.getString("a01"));
+				s.setA02(rs.getString("a02")==null?"&nbsp;":rs.getString("a02"));
+				s.setA03(rs.getString("a03")==null?"&nbsp;":rs.getString("a03"));
+				s.setA04(rs.getString("a04")==null?"&nbsp;":rs.getString("a04"));
+				s.setA05(rs.getString("a05")==null?"&nbsp;":rs.getString("a05"));
+				s.setA06(rs.getString("a06")==null?"&nbsp;":rs.getString("a06"));
+				s.setA07(rs.getString("a07")==null?"&nbsp;":rs.getString("a07"));
+				s.setA08(rs.getString("a08")==null?"&nbsp;":rs.getString("a08"));
+				s.setA09(rs.getString("a09")==null?"&nbsp;":rs.getString("a09"));
+				s.setA10(rs.getString("a10")==null?"&nbsp;":rs.getString("a10"));
+				s.setA11(rs.getString("a11")==null?"&nbsp;":rs.getString("a11"));
+				s.setA12(rs.getString("a12")==null?"&nbsp;":rs.getString("a12"));
+				s.setA13(rs.getString("a13")==null?"&nbsp;":rs.getString("a13"));
+				s.setA14(rs.getString("a14")==null?"&nbsp;":rs.getString("a14"));
+				s.setA15(rs.getString("a15")==null?"&nbsp;":rs.getString("a15"));
+				s.setA16(rs.getString("a16")==null?"&nbsp;":rs.getString("a16"));
+				s.setA17(rs.getString("a17")==null?"&nbsp;":rs.getString("a17"));
+				s.setA18(rs.getString("a18")==null?"&nbsp;":rs.getString("a18"));
+				s.setA19(rs.getString("a19")==null?"&nbsp;":rs.getString("a19"));
+				s.setA20(rs.getString("a20")==null?"&nbsp;":rs.getString("a20"));
+				s.setA21(rs.getString("a21")==null?"&nbsp;":rs.getString("a21"));
+				s.setA22(rs.getString("a22")==null?"&nbsp;":rs.getString("a22"));
+				s.setA23(rs.getString("a23")==null?"&nbsp;":rs.getString("a23"));
+				list.add(s);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//杭州出租车春运期间分布情况(每日统计)
+	public List<SpringFestival>findzdqyrtj(){
+		List<SpringFestival>list=new ArrayList<SpringFestival>();
+		String sql="select to_char(begindate,'dd') begindate," +
+				"sum(dongzhan) dongzhan,sum(jichang) jichang," +
+				"sum(chengzhan) chengzhan,sum(keyun) keyun," +
+				"sum(beizhan) beizhan,sum(nanzhan) nanzhan,sum(xizhan) xizhan" +
+				" from( select begindate," +
+				" sum(decode(areaid, '7', taxinum, null)) dongzhan," +
+				" sum(decode(areaid, '8', taxinum, null)) jichang," +
+				" sum(decode(areaid, '9', taxinum, null)) chengzhan," +
+				" sum(decode(areaid, '10', taxinum, null)) keyun," +
+				" sum(decode(areaid, '11', taxinum, null)) beizhan," +
+				" sum(decode(areaid, '12', taxinum, null)) nanzhan," +
+				" sum(decode(areaid, '13', taxinum, null)) xizhan" +
+				" from TB_TAXI_IMPORTANT_AREA group by begindate)" +
+				" group by to_char(begindate,'dd') order by begindate desc";
+		try{
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				SpringFestival s=new SpringFestival();
+				s.setTime(rs.getString("begindate"));
+				s.setJichang(rs.getString("jichang"));
+				s.setDongzhan(rs.getString("dongzhan"));
+				s.setChengzhan(rs.getString("chengzhan"));
+				s.setKeyun(rs.getString("keyun"));
+				s.setBeizhan(rs.getString("beizhan"));
+				s.setNanzhan(rs.getString("nanzhan"));
+				s.setXizhan(rs.getString("xizhan"));
+				list.add(s);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		}catch(SQLException e){
+			e.printStackTrace();
+		}
+		return list;
+	}
+	public String idzh(String info){
+		String xx="";
+		if(info.equals("7")){
+			xx="火车东站";
+		}else if(info.equals("8")){
+			xx="机场";
+		}else if(info.equals("9")){
+			xx="杭州城站";
+		}else if(info.equals("10")){
+			xx="杭州汽车客运中心站";
+		}else if(info.equals("11")){
+			xx="杭州汽车北站";
+		}else if(info.equals("12")){
+			xx="杭州汽车南站";
+		}else if(info.equals("13")){
+			xx="杭州汽车西站";
+		}
+		return xx;
+	}
+}

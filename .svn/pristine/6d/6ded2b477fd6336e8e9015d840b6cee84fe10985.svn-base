@@ -1,0 +1,25 @@
+package com.tw.action;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.opensymphony.xwork2.Action;
+import com.tw.entity.Company;
+
+public class PublicAction implements Action{
+	List<Company>list=new ArrayList<Company>();
+	//根据权限查询公司
+	
+	public String execute() throws Exception {
+		return null;
+	}
+
+	public List<Company> getList() {
+		return list;
+	}
+
+	public void setList(List<Company> list) {
+		this.list = list;
+	}
+	
+}

@@ -1,0 +1,31 @@
+﻿
+/*** layerout stylesheet ***/
+/* 修改背景URL */
+div.change{
+	background-image:url(http://pages.haozu.ajkcdn.com/20110909/img/map/marker-h.png);
+}
+div.change div{
+	background-image:url(http://pages.haozu.ajkcdn.com/20110909/img/map/marker-h-l.gif);
+}
+
+/*** copied from demo #39 添加自定义点覆盖物 ***/
+/* 定义自定义点样式 */
+.markerContentStyle{position:relative;}
+.markerContentStyle span{
+	text-align:left;
+	background-color: #FFFFFF;
+	color:BLACK;
+	width:120px;
+	heigth:80px;
+	border:2px solid BLACK;
+	FONT-FAMILY:微软雅黑;
+	position:absolute;
+	top:-10px;left:25px;
+	white-space:nowrap webkit-border-radius:5px;
+	border-radius:5px;
+}
+
+/*** copied from demo #43 添加自定义信息窗体 ***/
+/* 定义自定义信息窗体样式 */
+
+/*** -------------------------***/

@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>杭州交通卫星定位监控调度系统 </title>
+    <link href="css/login_css.css" rel="stylesheet" type="text/css" />
+    
+    <style type="text/css">
+        BODY
+        {
+            background-color:#d7e7f5;
+            margin: 0px;
+        }
+        .bd
+        {
+            font-family: "宋体";
+            font-size: 14px;
+        }
+        .textfield
+        {
+            border: 1px solid #000000;
+            font-family: "Arial" , "Helvetica" , "sans-serif";
+            color: #105194;
+            font-size: 14px;
+            font-weight: normal;
+            text-decoration: none;
+            width: 155px;
+            height: 24px;
+        }
+        A:link
+        {
+            line-height: 150%;
+            font-family: "宋体";
+            color: #4e5971;
+            font-size: 14px;
+        }
+        A:visited
+        {
+            line-height: 150%;
+            font-family: "宋体";
+            color: #4e5971;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        A:hover
+        {
+            line-height: 150%;
+            font-family: "宋体";
+            color: #0000ff;
+            font-size: 14px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<form action="login.action"  method="post" id="login-form">
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" 
+        style="background-image: url('img/dl.png'); background-repeat: repeat-x">
+        <tbody>
+            <tr>
+                <td>
+                    <table border="0" cellspacing="0" cellpadding="0" width="1280px" align="center" style="height: 656px;
+                        background-image: url('img/dl1.png');">
+                        <tbody>
+                            <tr>
+                                <td width="520px">
+                                    &nbsp;
+                                </td>
+                                <td>
+                                    <table border="0" cellspacing="0" cellpadding="0" width="100%">
+                                        <tbody>
+                                            <tr>
+                                                
+                                                <td width="50">
+                                                    <img src="img/login_username.png">
+                                                </td>
+                                                <td width="165">
+                                                    <input class="textfield" name="username"  id="username" size="28">
+                                                </td>
+                                                <td rowspan="3" align="left">
+                                                    <input border="0" name="imageField" src="img/login_submit.png" type="image" onclick="document.getElementById('login-form').submit();">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    &nbsp;
+                                                </td>
+                                                <td>
+                                                    &nbsp;
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <img src="img/login_password.png">
+                                                </td>
+                                                <td>
+                                                    <input class="textfield" name="password"  id="password" size="28" type="password">
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+               
+            </tr>
+        </tbody>
+    </table>
+</form>
+
+</body>
+</html>

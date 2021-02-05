@@ -1,0 +1,308 @@
+package com.tw.listener;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import com.tw.cache.DataItem;
+import com.tw.cache.GisData;
+import com.tw.dao.AreaDao;
+import com.tw.dao.RealtimeDao;
+import com.tw.entity.Area;
+import com.tw.entity.Numb;
+import com.tw.entity.Vehicle;
+import com.vividsolutions.jts.geom.Geometry;
+import com.ze.util.GeometryHandler;
+
+/**
+ * 
+ * @author qiaoliang.jian
+ * @version
+ */
+public class SystemInitLister implements ServletContextListener {
+
+	private String configPropertiesPath = "";
+
+	public void contextInitialized(ServletContextEvent sce) {
+
+		Thread thread = new Thread() {
+			private List<Vehicle> vehilist = new ArrayList<Vehicle>();
+			private RealtimeDao rtDao = new RealtimeDao();
+			private AreaDao areaDao = new AreaDao();
+			private String keyword = "", compid = "所有公司,所有分公司,所有车辆";
+			private Numb num = new Numb();
+			private List<Area> arealist = new ArrayList<Area>();
+			private long sleepTime = 30000;
+
+			@Override
+			public void run() {
+				while (true) {
+					String id = "207";
+					int onnum = 0;
+					int offnum = 0;
+					int hnum = 0;
+					int nnum = 0;
+
+					long startTime = System.currentTimeMillis();
+					vehilist = rtDao.findbykeyword(keyword, compid);
+					for (int i = 0; i < vehilist.size(); i++) {
+						Vehicle va = vehilist.get(i);
+						if (va.getLati() == null || "".equals(va.getLati())
+								|| "0.0".equals(va.getLati())
+								|| "".equals(va.getLongi())
+								|| "0.0".equals(va.getLongi())) {
+							offnum++;
+						} else {
+
+							if (va.getOnoffstate().equals("1")) {
+								onnum++;
+								if (va.getCarStatus().equals("0")) {
+									nnum++;
+								} else {
+									hnum++;
+								}
+							} else {
+								offnum++;
+							}
+						}
+					}
+					int total = vehilist.size();
+					num.setTotal(total + "");
+					num.setOnnum(onnum + "");
+					num.setOffnum(offnum + "");
+					num.setHnum(hnum + "");
+					num.setNnum(nnum + "");
+
+					arealist = areaDao.finduserarea(id);
+					
+					for(int j=0;j<vehilist.size();j++){
+						for(int k=0;k<arealist.size();k++){
+							if(rectContains(vehilist.get(j), arealist.get(k))){
+								arealist.get(k).getAll().add(vehilist.get(j).getVehino());
+								break;
+							}
+						}
+					}
+					
+					long endTime = System.currentTimeMillis();
+					//System.out.println("##cost:" + (endTime - startTime)
+					//		/ 1000.0f);
+
+					DataItem data = (DataItem) GisData.map.get("data");
+					if (null == data) {
+						data = new DataItem();
+						GisData.map.put("data", data);
+					}
+
+					endTime = System.currentTimeMillis();
+					Collections.sort(vehilist, new PointCompare2());
+					List<Vehicle> l2 = null, l3 = null, l4 = null, l5 = null, l6 = null, l7 = null;
+					try {
+						l2 = deepCopy(vehilist);
+						l3 = deepCopy(vehilist);
+						l4 = deepCopy(vehilist);
+						l5 = deepCopy(vehilist);
+						l6 = deepCopy(vehilist);
+						l7 = deepCopy(vehilist);
+						// deletePoint2(vehilist,0.1);
+						deletePoint2(l2, 0.02);// 12,13,
+						deletePoint2(l3, 0.01);// 14,15
+						deletePoint2(l4, 0.07);// 10,11
+
+						deletePoint2(l5, 0.3);//
+						deletePoint2(l6, 1);//
+						deletePoint2(l7, 4);//
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					data.setArealist(arealist);
+					data.setNum(num);
+					data.setVehilist(vehilist);
+					data.setL2(l2);
+					data.setL3(l3);
+					data.setL4(l4);
+					data.setL5(l5);
+					data.setL6(l6);
+					data.setL7(l7);
+
+				//	System.out.println("## sort" + (System.currentTimeMillis() - endTime) / 1000.f);
+					endTime = System.currentTimeMillis();
+
+					//System.out.println(vehilist.size());
+					deleteItem(vehilist);
+					deleteItem(l2);
+					deleteItem(l3);
+					deleteItem(l4);
+					deleteItem(l5);
+					deleteItem(l6);
+					deleteItem(l7);
+				//	System.out.println(vehilist.size() + "," + l2.size() + ","
+				//			+ l3.size() + "," + l4.size() + "," + l5.size()
+				//			+ "," + l6.size() + "," + l7.size());
+				//	System.out.println("## cluster "+ (System.currentTimeMillis() - endTime) / 1000.f);
+
+					try {
+						Thread.sleep(sleepTime );
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				
+			}
+
+			public void deletePoint2(List<Vehicle> list, double distanceCz) {
+				for (int i = 0; i < list.size(); i++) {
+					Vehicle p1 = list.get(i);
+					for (int j = i + 1; j < list.size(); j++) {
+						if (p1.isDeleteFlag()) {
+							continue;
+						}
+						Vehicle p2 = list.get(j);
+						if (p2.isDeleteFlag()) {
+							continue;
+						}
+						double distance = getDistance(p1, p2);
+						// System.out.print(distance+",#");
+
+						if (distance < distanceCz) {
+							// if(distanceCz == 0.07){
+							// System.out.println("##"+i+",p1:"+p1.getLongi()+","
+							// + p1.getLati()+"\tp2:"+p2.getLongi()+"," +
+							// p2.getLati() + "\t"+distance);
+							// }
+							if (p1.getX2() == 0) {
+								p1.setX2(p1.getLongi());
+							}
+							if (p1.getY2() == 0) {
+								p1.setY2(p1.getLati());
+							}
+							p2.setDeleteFlag(true);
+							p1.setCluster(p1.getCluster() + 1);
+							p1.setX2(p1.getX2() + p2.getLongi());
+							p1.setY2(p1.getY2() + p2.getLati());
+//							p1.getXys().append(
+//									p2.getLongi() + "," + p2.getLati() + ";");
+						}
+					}
+				}
+			}
+
+		 	private  void  deleteItem(List<Vehicle> list) {
+		 		for(Iterator<Vehicle> iterator = list.iterator();iterator.hasNext();){
+		 			Vehicle item = iterator.next();
+		 			if (item.isDeleteFlag()) {
+						iterator.remove();
+					} else {
+						if (item.getCluster() > 50) {
+							item.setLati(item.getY2() / item.getCluster());
+							item.setLongi(item.getX2() / item.getCluster());
+							// System.out.println(item.getLongi()+","+item.getLati()+","+item.getCluster());
+							// if(item.getCluster()==476){
+							// System.out.println(item.getXys());
+							// }
+						}
+					}
+		 		}
+			}
+
+			public double getDistance(Vehicle p1, Vehicle p2) {
+				double dx = p2.getLongi() - p1.getLongi();
+				double dy = p2.getLati() - p1.getLati();
+
+				double distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+				return distance;
+				// System.out.println(distance);
+			}
+
+			public <T> List<T> deepCopy(List<T> src) throws IOException,
+					ClassNotFoundException {
+				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+				ObjectOutputStream out = new ObjectOutputStream(byteOut);
+				out.writeObject(src);
+
+				ByteArrayInputStream byteIn = new ByteArrayInputStream(
+						byteOut.toByteArray());
+				ObjectInputStream in = new ObjectInputStream(byteIn);
+				@SuppressWarnings("unchecked")
+				List<T> dest = (List<T>) in.readObject();
+				return dest;
+			}
+		};
+
+		try {
+			thread.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 车辆是否在区域内
+	 * @param vehicle
+	 * @param area
+	 * @return
+	 */
+	private boolean rectContains(Vehicle vehicle, Area area) {
+		
+		String[] zbs = area.getAreazbs().split(";");//120.123,30.123;123.123,33.211;
+		Geometry geometry=GeometryHandler.getGeometryObject(area.getAreazbs()+";"+zbs[0]);
+		String xy = vehicle.getLongi() +"," + vehicle.getLati();
+		Geometry g2=GeometryHandler.getGeometryObject(xy);
+		return geometry.contains(g2);
+		
+//		for(int i=0;i<zbs.length;i++){
+//			xs[i] = Integer.parseInt(zbs[i].split(",")[0].replace(".", ""));
+//			ys[i] = Integer.parseInt(zbs[i].split(",")[1].replace(".", ""));
+//		}
+//		
+//		Polygon polygon =new Polygon(xs,ys,xs.length);
+//		
+//		String dx = vehicle.getLongi()+"";
+//		String dy = vehicle.getLati()+"";
+
+//		return polygon.contains(Integer.parseInt(dx.replace(".", "")), Integer.parseInt(dy.replace(".", "")));
+		
+		
+		//网上方法
+		/*Builder b = new Builder();
+		String[] zbs = area.getAreazbs().split(";");
+		for(int i=0;i<zbs.length;i++){
+			float px = Float.parseFloat(zbs[i].split(",")[0]);
+			float py = Float.parseFloat(zbs[i].split(",")[1]);
+			b.addVertex(new Point(px, py));
+		}
+		Polygon polygon = b.build();
+		boolean contains = polygon.contains(new Point((float)dx, (float)dy));
+		return contains;*/
+	}
+
+	public void contextDestroyed(ServletContextEvent sce) {
+		System.out.println("#####system destroye#####");
+	}
+}
+
+class PointCompare2 implements Comparator<Vehicle> {
+	public int compare(final Vehicle a, final Vehicle b) {
+		if (a.getLongi() < b.getLongi()) {
+			return -1;
+		} else if (a.getLongi() > b.getLongi()) {
+			return 1;
+		} else if (a.getLati() < b.getLati()) {
+			return -1;
+		} else if (a.getLati() > b.getLati()) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+}
